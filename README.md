@@ -11,4 +11,4 @@ When receiving commands remotely the socket can either be used raw or as a webso
 
 It uses the SHA1 and Base64 libraries from https://github.com/ejeklint/ArduinoWebsocketServer in order to provide the Websocket functionality.
 
-This is a fork of the Mirobot project (http://mirobot.io).
+This is a branch of the Mirobot project (http://mirobot.io).
