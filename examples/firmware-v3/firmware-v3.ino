@@ -1,14 +1,14 @@
-#include <Mirobot.h>
+#include <Evebrain.h>
 
-Mirobot mirobot;
+Evebrain evebrain;
 
 void setup(){
-  mirobot.begin();
-  mirobot.enableSerial();
-  mirobot.enableWifi();
+  evebrain.begin();
+  evebrain.enableSerial();
+  evebrain.enableWifi();
 }
 
 void loop(){
-  mirobot.loop();
+  evebrain.loop();
 }
 

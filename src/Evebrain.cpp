@@ -1,6 +1,6 @@
 #include "Arduino.h"
 #include "Evebrain.h"
-#include "DHTesp.h"
+#include "lib/DHT/DHTesp.h"
 
 DHTesp dht;
 CmdProcessor cmdProcessor;
@@ -56,6 +56,8 @@ void Evebrain::begin(unsigned char v){
   _collideStatus = NORMAL;
   // Initialise the pen arm into the up position
   setPenState(UP);
+  servoPosition = 30;
+
   // Pull the settings out of memory
   initSettings();
 }
@@ -189,6 +191,7 @@ void Evebrain::initCmds(){
   cmdProcessor.addCmd("leftMotorB",       &Evebrain::_leftMotorBackward,false);
   cmdProcessor.addCmd("rightMotorF",      &Evebrain::_rightMotorForward,false);
   cmdProcessor.addCmd("rightMotorB",      &Evebrain::_rightMotorBackward,false);
+  cmdProcessor.addCmd("servo",            &Evebrain::_servo,            false);
   cmdProcessor.addCmd("getConfig",        &Evebrain::_getConfig,        true);
   cmdProcessor.addCmd("setConfig",        &Evebrain::_setConfig,        true);
   cmdProcessor.addCmd("resetConfig",      &Evebrain::_resetConfig,      true);
@@ -297,6 +300,10 @@ void Evebrain::_leftMotorBackward(ArduinoJson::JsonObject &inJson, ArduinoJson::
 
 void Evebrain::_rightMotorBackward(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
   rightMotorBackward(atoi(inJson["arg"].asString()));
+}
+
+void Evebrain::_servo(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
+  servo(atoi(inJson["arg"].asString()));
 }
 
 void Evebrain::_penup(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
@@ -642,6 +649,18 @@ void Evebrain::leftMotorForward(int distance){
   takeUpSlack(BACKWARD, FORWARD);
   rightMotor.turn(distance * steps_per_degree * settings.turnCalibration, BACKWARD,1);
   leftMotor.turn(distance * steps_per_degree * settings.turnCalibration, FORWARD);
+  wait();
+}
+
+void Evebrain::servo(int angle){
+  servo_pulses_left = abs(servoPosition - angle);
+  next_servo_pulse = 0;
+  if ((servoPosition - angle) < 0){
+    penState = DOWN;
+  } else {
+    penState = UP;
+  }
+  servoPosition = angle;
   wait();
 }
 

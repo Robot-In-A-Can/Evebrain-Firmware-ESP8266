@@ -146,6 +146,7 @@ class Evebrain {
     void rightMotorForward(int distance);
     void leftMotorBackward(int distance);
     void rightMotorBackward(int distance);
+    void servo(int angle);
     void temperature();
     void humidity();
     void distanceSensor();
@@ -211,6 +212,7 @@ class Evebrain {
     void _leftMotorBackward(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _rightMotorBackward(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _analogInput(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
+    void _servo(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _temperature(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _humidity(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _digitalInput(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
@@ -234,6 +236,7 @@ class Evebrain {
     boolean humidityRead;
     boolean temperatureRead;
     boolean distanceRead;
+    byte servoPosition;
     char lastCollideState;
     int lastFollowState;
     collideStatus_t _collideStatus;
