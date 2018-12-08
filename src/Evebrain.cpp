@@ -35,8 +35,6 @@ Evebrain::Evebrain(){
   humidityRead = 0;
   temperatureRead = 0;
   distanceRead = 0;
-  temperatureVar = 0;
-  humidityVar = 0;
   wifiEnabled = false;
 }
 
@@ -53,6 +51,7 @@ void Evebrain::begin(unsigned char v){
 
   // Set up the pen arm servo
   pinMode(SERVO_PIN, OUTPUT);
+
   _collideStatus = NORMAL;
   // Initialise the pen arm into the up position
   setPenState(UP);
@@ -590,20 +589,18 @@ short Evebrain::analogInput(byte pin){
 }
 
 void Evebrain::temperature(){
-  dht.setup(DHTPIN);
-  timeTillComplete = millis() + 2000;
+  //Setup DHT11
+  dht.setup(DHTPIN,DHTesp::DHT11);
+  timeTillComplete = millis() + 1500;
   wait();
-  temperatureVar = dht.getTemperature();
-  delay(1500);
   temperatureRead = 1;
 }
 
 void Evebrain::humidity(){
-  dht.setup(DHTPIN);
-  timeTillComplete = millis() + 2000;
+  //Setup DHT11
+  dht.setup(DHTPIN,DHTesp::DHT11);
+  timeTillComplete = millis() + 1500;
   wait();
-  humidityVar = dht.getHumidity();
-  delay(1500);
   humidityRead = 1;
 }
 
@@ -995,12 +992,14 @@ void Evebrain::checkReady(){
   if(cmdProcessor.in_process && ready()){
     //if temperature ready is ready
     if (temperatureRead){
+      temperatureVar = dht.getTemperature();
       cmdProcessor.sendCompleteMSG(itoa(temperatureVar, snum, 10));
       temperatureRead = 0;
       Serial.println(temperatureVar);
     }
     //if humidity is ready
     else if (humidityRead){
+      humidityVar = dht.getHumidity();
       cmdProcessor.sendCompleteMSG(itoa(humidityVar, snum, 10));
       humidityRead = 0;
     } 

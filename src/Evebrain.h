@@ -29,8 +29,8 @@
 #define PENUP_DELAY_V1 1200
 #define PENDOWN_DELAY_V1 2000
 
-#define CIRCUMFERENCE_MM_V2  256.0f
-#define WHEEL_DISTANCE_V2    90.5f
+#define CIRCUMFERENCE_MM_V2  254.4f
+#define WHEEL_DISTANCE_V2    100.5f
 #define PENUP_DELAY_V2 2000
 #define PENDOWN_DELAY_V2 1100
 
@@ -231,8 +231,8 @@ class Evebrain {
 #endif
     long duration;
     byte distanceVar;
-    byte temperatureVar;
-    byte humidityVar;
+    float temperatureVar;
+    float humidityVar;
     boolean humidityRead;
     boolean temperatureRead;
     boolean distanceRead;
