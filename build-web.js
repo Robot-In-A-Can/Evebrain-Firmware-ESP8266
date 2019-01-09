@@ -19,7 +19,7 @@ var minifySettings = {minifyJS: true, minifyCSS: true}
 outFiles = [];
 
 function convert(f){
-  var data = new Buffer(f[1]);
+  var data = new Buffer.from(f[1]);
   byteData = []
   for(var i=0; i<data.length; i++){
     byteData.push("0x" + data[i].toString(16));

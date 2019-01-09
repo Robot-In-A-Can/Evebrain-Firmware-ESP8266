@@ -66,10 +66,11 @@ var Builder = function(el, mirobot, disableLocalstorage){
   this.mirobot = mirobot;
   this.fns = {};
   this.paused = false;
-  this.following = false;
+  this.analoging = false;
   this.colliding = false;
   this.store = !disableLocalstorage;
   this.init();
+  this.step = 0;
 
   snack.each(this.functions, function(f){
     self.fns[f.name] = f;
@@ -107,19 +108,17 @@ Builder.prototype = {
       }
       e.preventDefault();
     }, false);
-    
+    this.analog = $('.editor #analog');
     this.runner = $('.editor .run');
     this.pause = $('.editor .pause');
     this.stop = $('.editor .stop');
     this.clear = $('.editor .clear');
-    this.follow = $('.editor #follow');
-    this.collide = $('.editor #collide');
+    this.collide = 0;
     this.runner.attach('click', function(e){self.runProgram()});
     this.pause.attach('click', function(e){self.pauseProgram()});
     this.stop.attach('click', function(e){self.stopProgram()});
+    this.analog.attach('click', function(e){self.analogClick()});
     this.clear.attach('click', function(e){self.clearProgram()});
-    this.follow.attach('click', function(e){self.followClick()});
-    this.collide.attach('click', function(e){self.collideClick()});
     
     this.initMirobot();
 
@@ -309,6 +308,7 @@ Builder.prototype = {
       self.paused = false;
       self.colliding = false;
       self.following = false;
+      self.analoging = false;
       self.updateState();
       cb && cb();
     });
@@ -320,22 +320,34 @@ Builder.prototype = {
     this.showHints();
   },
   updateState: function(){
-    this.follow[0].innerHTML = this.following ? "&#9724; Stop Following Lines" : "&#9654; Start Following Lines";
-    this.collide[0].innerHTML = this.colliding ? "&#9724; Stop Collision Detection" : "&#9654; Start Collision Detection";
     this.runner[0].className = (this.colliding || this.following) ? "run disabled" : "run";
   },
-  followClick: function(e){
-    var self = this;
-    if(self.following){
-      self.stopProgram();
+  analogClick: function(e){
+    var btn = document.getElementById('analog');
+    if(this.analoging){
+      window.clearTimeout(this.graphicInterval);
+      this.stopProgram();
+      btn.innerHTML = "&#9654;Graph";
     }else{
-      self.stopProgram(function(){
-        self.mirobot.follow(function(){
-          self.following = true;
-          self.updateState();
-        });
-      });
+      btn.innerHTML = "&#9724;Stop";
+      this.analoging = true;
+      this.graphicInterval = window.setTimeout(this.drawGraph(), 1500);
     }
+  },
+  drawGraph: function() {
+    var self = this;
+    self.mirobot.analogInput(0,function(value){
+      var canvas = document.getElementById("graph");
+      var context = canvas.getContext("2d");
+      context.fillStyle = 'rgb(255,'+ (190-(Math.min(190,value/3))) +',10)';
+      var yheight = (290*(parseInt(value,10)/1024))/2;
+      var imageData = context.getImageData(2, 0, context.canvas.width-2, context.canvas.height);
+      context.putImageData(imageData, 0, 0);
+      // now clear the right-most pixels:
+      context.clearRect(context.canvas.width-2, 0, 2, context.canvas.height);
+      context.fillRect(298,0,2,yheight);
+    }); 
+    this.graphicInterval = window.setTimeout(this.drawGraph(), 1500);
   },
   collideClick: function(e){
     var self = this;
@@ -396,22 +408,6 @@ Builder.prototype = {
         }
       },
       {
-        name:'penup',
-        type:'child',
-        content:{str: l(":penup-cmd")},
-        run: function(node, mirobot, cb){
-          mirobot.penup(cb);
-        }
-      },
-      {
-        name:'pendown',
-        type:'child',
-        content:{str: l(":pendown-cmd")},
-        run: function(node, mirobot, cb){
-          mirobot.pendown(cb);
-        }
-      },
-      {
         name:'repeat',
         type:'parent',
         content:{
@@ -425,17 +421,6 @@ Builder.prototype = {
             }
           }
         }
-      },
-      {
-        name:'beep',
-        type:'child',
-        content:{
-          str: l(":beep-cmd"),
-          duration: {name: 'duration', input:'number', default:0.5}
-        },
-        run: function(node, mirobot, cb){
-          mirobot.beep(node.args().duration * 1000, cb);
-        }
       }
     ]
   }
@@ -448,8 +433,9 @@ Builder.prototype.mainUI = function(){
   <h2>' + l(':toolbox') + '</h2>\
   <ol class="functionList"></ol>\
   <div class="extra">\
-    <button id="follow">&#9654; ' + l(':start-following') + '</button>\
-    <button id="collide">&#9654; ' + l(":start-collision") + '</button>\
+    <h2> A0 </h2>\
+    <canvas id="graph"></canvas>\
+    <center><button id="analog">&#9654;Graph</button></center>\
   </div>\
 </div>\
 <div class="right container">\

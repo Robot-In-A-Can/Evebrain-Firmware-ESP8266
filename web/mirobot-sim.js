@@ -72,7 +72,7 @@ MirobotSim = function(button_id, mirobot){
 
   var label = document.createElement('span');
   label.className = 'label';
-  label.innerHTML = l(":100mm-grid");
+  label.innerHTML = l(":100mm-grid - *Robot Paused*");
   this.sim.appendChild(label);
 
   var settings = document.createElement('div');
@@ -279,6 +279,12 @@ MirobotSim = function(button_id, mirobot){
         this.turtle.pendown(completeCb(cb, msg.id))
       }else if(msg.cmd === 'beep'){
         this.turtle.beep(Number(msg.arg), completeCb(cb, msg.id))
+      }else if(msg.cmd === 'getConfig'){
+        completeCb(cb, msg.id, 'sim')()
+      }else if(msg.cmd === 'startWifiScan'){
+        completeCb(cb, msg.id, 'sim')()
+      }else if(msg.cmd === 'analogInput'){
+        completeCb(cb, msg.id, '1')()
       }else{
         return cb({status: "error", id: msg.id});
       }

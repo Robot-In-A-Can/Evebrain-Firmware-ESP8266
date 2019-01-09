@@ -11,7 +11,11 @@ ShiftStepper leftMotor(0);
 
 EvebrainWifi wifi;
 
+Servo servoid;
+
 WS2812B led(STATUS_LED_PIN);
+
+int frequencyHZ[] =  {NOTE_B0,NOTE_C1,NOTE_CS1,NOTE_D1,NOTE_DS1,NOTE_E1,NOTE_F1,NOTE_FS1,NOTE_G1,NOTE_GS1,NOTE_A1,NOTE_AS1,NOTE_B1,NOTE_C2,NOTE_CS2,NOTE_D2, NOTE_DS2,NOTE_E2,NOTE_F2,NOTE_FS2,NOTE_G2,NOTE_GS2,NOTE_A2,NOTE_AS2,NOTE_B2,NOTE_C3,NOTE_CS3,NOTE_D3,NOTE_DS3,NOTE_E3,NOTE_F3,NOTE_FS3,NOTE_G3,NOTE_GS3,NOTE_A3,NOTE_AS3,NOTE_B3,NOTE_C4,NOTE_CS4,NOTE_D4,NOTE_DS4,NOTE_E4,NOTE_F4,NOTE_FS4,NOTE_G4,NOTE_GS4,NOTE_A4,NOTE_AS4,NOTE_B4,NOTE_C5,NOTE_CS5,NOTE_D5,NOTE_DS5,NOTE_E5,NOTE_F5,NOTE_FS5,NOTE_G5,NOTE_GS5,NOTE_A5,NOTE_AS5,NOTE_B5,NOTE_C6,NOTE_CS6,NOTE_D6, NOTE_DS6,NOTE_E6,NOTE_F6,NOTE_FS6,NOTE_G6,NOTE_GS6,NOTE_A6,NOTE_AS6,NOTE_B6,NOTE_C7,NOTE_CS7,NOTE_D7,NOTE_DS7,NOTE_E7,NOTE_F7,NOTE_FS7,NOTE_G7,NOTE_GS7,NOTE_A7,NOTE_AS7,NOTE_B7,NOTE_C8,NOTE_CS8,NOTE_D8,NOTE_DS8};
 
 void handleWsMsg(char * msg){
   cmdProcessor.processMsg(msg);
@@ -35,6 +39,8 @@ Evebrain::Evebrain(){
   humidityRead = 0;
   temperatureRead = 0;
   distanceRead = 0;
+  servoMove = 0;
+  buzzerBeep = 0;
   wifiEnabled = false;
 }
 
@@ -48,14 +54,6 @@ void Evebrain::begin(unsigned char v){
 
   // Set up the EEPROM
   EEPROM.begin(sizeof(settings)+2);
-
-  // Set up the pen arm servo
-  pinMode(SERVO_PIN, OUTPUT);
-
-  _collideStatus = NORMAL;
-  // Initialise the pen arm into the up position
-  setPenState(UP);
-  servoPosition = 30;
 
   // Pull the settings out of memory
   initSettings();
@@ -155,10 +153,6 @@ void Evebrain::initCmds(){
   cmdProcessor.addCmd("pause",            &Evebrain::_pause,            true);
   cmdProcessor.addCmd("resume",           &Evebrain::_resume,           true);
   cmdProcessor.addCmd("stop",             &Evebrain::_stop,             true);
-  cmdProcessor.addCmd("collideState",     &Evebrain::_collideState,     true);
-  cmdProcessor.addCmd("collideNotify",    &Evebrain::_collideNotify,    true);
-  cmdProcessor.addCmd("followState",      &Evebrain::_followState,      true);
-  cmdProcessor.addCmd("followNotify",     &Evebrain::_followNotify,     true);
   cmdProcessor.addCmd("slackCalibration", &Evebrain::_slackCalibration, true);
   cmdProcessor.addCmd("moveCalibration",  &Evebrain::_moveCalibration,  true);
   cmdProcessor.addCmd("turnCalibration",  &Evebrain::_turnCalibration,  true);
@@ -168,15 +162,10 @@ void Evebrain::initCmds(){
   cmdProcessor.addCmd("back",             &Evebrain::_back,             false);
   cmdProcessor.addCmd("right",            &Evebrain::_right,            false);
   cmdProcessor.addCmd("left",             &Evebrain::_left,             false);
-  cmdProcessor.addCmd("penup",            &Evebrain::_penup,            false);
-  cmdProcessor.addCmd("pendown",          &Evebrain::_pendown,          false);
-  cmdProcessor.addCmd("follow",           &Evebrain::_follow,           false);
-  cmdProcessor.addCmd("collide",          &Evebrain::_collide,          false);
   cmdProcessor.addCmd("beep",             &Evebrain::_beep,             false);
   cmdProcessor.addCmd("calibrateSlack",   &Evebrain::_calibrateSlack,   false);
-  cmdProcessor.addCmd("arc",              &Evebrain::_arc,              false);
-
   cmdProcessor.addCmd("analogInput",      &Evebrain::_analogInput,      true);
+  cmdProcessor.addCmd("readSensors",      &Evebrain::_readSensors,      false);
   cmdProcessor.addCmd("digitalInput",     &Evebrain::_digitalInput,     true);
   cmdProcessor.addCmd("gpio_on",          &Evebrain::_gpio_on,          true);
   cmdProcessor.addCmd("gpio_off",         &Evebrain::_gpio_off,         true);
@@ -220,34 +209,6 @@ void Evebrain::_stop(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &o
   stop();
 }
 
-void Evebrain::_collideState(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
-  switch(collideState()){
-    case NONE:
-      outJson["msg"] = "none";
-      break;
-    case LEFT:
-      outJson["msg"] = "left";
-      break;
-    case RIGHT:
-      outJson["msg"] = "right";
-      break;
-    case BOTH:
-      outJson["msg"] = "both";
-      break;
-  }
-}
-
-void Evebrain::_collideNotify(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
-  collideNotify = !!strcmp(inJson["arg"], "false");
-}
-
-void Evebrain::_followState(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
-  outJson["msg"] = followState();
-}
-
-void Evebrain::_followNotify(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
-  followNotify = !!strcmp(inJson["arg"].asString(), "false");
-}
 
 void Evebrain::_slackCalibration(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
   outJson["msg"] = settings.slackCalibration;
@@ -305,38 +266,24 @@ void Evebrain::_servo(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &
   servo(atoi(inJson["arg"].asString()));
 }
 
-void Evebrain::_penup(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
-  penup();
-}
-
-void Evebrain::_pendown(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
-  pendown();
-}
-
-void Evebrain::_follow(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
-  follow();
-}
-
-void Evebrain::_collide(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
-  collide();
-}
-
 void Evebrain::_beep(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
-  beep(atoi(inJson["arg"].asString()));
+  char s[16];
+  strcpy(s, inJson["arg"].asString());
+  char* token1 = strtok(s, ",");
+  char* token2 = strtok(NULL, ",");
+  beep(atoi(token1), atoi(token2));
 }
 
 void Evebrain::_calibrateSlack(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
   calibrateSlack(atoi(inJson["arg"].asString()));
 }
 
-void Evebrain::_arc(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
-  if(inJson["arg"].is<JsonArray&>() && inJson["arg"].size() == 2){
-    arc(inJson["arg"][0].as<float>(), inJson["arg"][1].as<float>());
-  }
+void Evebrain::_analogInput(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
+  outJson["msg"] = analogInput();
 }
 
-void Evebrain::_analogInput(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
-  outJson["msg"] = analogInput(atoi(inJson["arg"].asString()));
+void Evebrain::_readSensors(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
+  readSensors(atoi(inJson["arg"].asString()));
 }
 
 void Evebrain::_distanceSensor(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
@@ -500,16 +447,6 @@ void Evebrain::right(int angle){
   wait();
 }
 
-void Evebrain::penup(){
-  setPenState(UP);
-  wait();
-}
-
-void Evebrain::pendown(){
-  setPenState(DOWN);
-  wait();
-}
-
 void Evebrain::pause(){
   rightMotor.pause();
   leftMotor.pause();
@@ -525,67 +462,20 @@ void Evebrain::resume(){
 void Evebrain::stop(){
   rightMotor.stop();
   leftMotor.stop();
-  following = false;
-  colliding = false;
   calibratingSlack = false;
 }
 
-void Evebrain::follow(){
-  following = true;
-}
-
-int Evebrain::followState(){
-  return leftLineSensor - rightLineSensor;
-}
-
-void Evebrain::collide(){
-  colliding = true;
-}
-
-collideState_t Evebrain::collideState(){
-  readSensors();
-  if(leftCollide && rightCollide){
-    return BOTH;
-  }else if(leftCollide){
-    return LEFT;
-  }else if(rightCollide){
-    return RIGHT;
-  }else{
-    return NONE;
+void Evebrain::beep(int semi_tone, int duration){
+  if (semi_tone>=0 && semi_tone<=88){
+    tone(SPEAKER_PIN, frequencyHZ[semi_tone]);
   }
-}
-
-void Evebrain::beep(int duration){
-  tone(SPEAKER_PIN, NOTE_C4, duration);
   timeTillComplete = millis() + duration;
+  wait();
+  buzzerBeep = 1;
 }
 
-short Evebrain::analogInput(byte pin){
-  if (pin == 0){
-    return analogRead(pin);
-  }
-  else if (pin > 0 && pin < 5) {
-    if(millis() >= nextADCRead){
-      nextADCRead = millis() + 10;
-      uint8_t temp[4];
-      // Fetch the data from the ADC
-      Wire.beginTransmission(PCF8591_ADDRESS); // wake up PCF8591
-      Wire.write(0x04); // control byte - read ADC0 and increment counter
-      Wire.endTransmission();
-      Wire.requestFrom(PCF8591_ADDRESS, 6);
-      Wire.read(); // Padding bytes to allow conversion to complete
-      Wire.read(); // Padding bytes to allow conversion to complete
-      temp[0] = Wire.read();
-      temp[1] = Wire.read();
-      temp[2] = Wire.read();
-      temp[3] = Wire.read();
-
-      // Sanity check to make sure I2C data hasn't gone out of sync
-      if((temp[2] == 0 || temp[2] == 255) && (temp[3] == 0 || temp[3] == 255)){
-        return temp[pin-1];
-      }
-    }
-  }
+short Evebrain::analogInput(){
+  return analogRead(0);
 }
 
 void Evebrain::temperature(){
@@ -624,6 +514,7 @@ void Evebrain::distanceSensor(){
 }
 
 short Evebrain::digitalInput(byte pin){
+  digitalWrite(pin, LOW);
   pinMode(pin, INPUT); 
   return digitalRead(pin);
 }
@@ -650,15 +541,12 @@ void Evebrain::leftMotorForward(int distance){
 }
 
 void Evebrain::servo(int angle){
-  servo_pulses_left = abs(servoPosition - angle);
-  next_servo_pulse = 0;
-  if ((servoPosition - angle) < 0){
-    penState = DOWN;
-  } else {
-    penState = UP;
-  }
-  servoPosition = angle;
+  // Set up the servo
+  servoid.attach(SERVO_PIN);
+  servoid.write(angle);
+  timeTillComplete = millis() + 1000;
   wait();
+  servoMove = 1;
 }
 
 void Evebrain::rightMotorForward(int distance){
@@ -682,107 +570,13 @@ void Evebrain::rightMotorBackward(int distance){
   wait();
 }
 
-void Evebrain::arc(float angle, float radius){
-  // Drawing an arc means drawing three concentric circular arcs with two wheels and a pen at the centre
-  // So we need to work out the length of the outer, wheel arcs and then move them by that amount in the same time
-  // To calculate the distance we can work out:
-  //   circumference = 2 * pi * radius
-  //   distance = circumference * (angle / 360)
-  // combined:
-  //   distance = 2 * pi * radius * (angle / 360)
-  //   distance = 2 * 3.141593 * radius * (angle / 360)
-  //   distance = 6.283185 * radius * (angle / 360)
-  //   distance = 0.017453 * radius * angle
-  float right_distance, left_distance;
-  float right_rate, left_rate;
-  int wheel_distance = 120;
-
-  // extract the sign of the direction (+1 / -1) which will give us the correct distance to turn the steppers
-  char dir = (radius > 0) - (radius < 0);
-
-  // work out the distances each wheel has to move
-  right_distance = 0.017453 * (radius - (wheel_distance / 2.0)) * angle * dir;
-  left_distance = 0.017453 * (radius + (wheel_distance / 2.0)) * angle * dir;
-
-  // work out the rate the wheel should move relative to full speed
-  right_rate = abs((right_distance > left_distance) ? 1 : (right_distance / left_distance));
-  left_rate = abs((right_distance > left_distance) ? (left_distance / right_distance) : 1);
-
-  // move the wheels
-  takeUpSlack((right_distance > 0), (left_distance < 0));
-  rightMotor.turn(abs(right_distance) * steps_per_mm * settings.moveCalibration, (right_distance > 0), right_rate);
-  leftMotor.turn(abs(left_distance) * steps_per_mm * settings.moveCalibration, (left_distance < 0), left_rate);
-  wait();
-}
-
 boolean Evebrain::ready(){
-  return (rightMotor.ready() && leftMotor.ready() && !servo_pulses_left && timeTillComplete < millis());
+  return (rightMotor.ready() && leftMotor.ready() && timeTillComplete < millis());
 }
 
 void Evebrain::wait(){
   if(blocking){
     while(!ready()){
-      if(servo_pulses_left){
-        servoHandler();
-      }
-    }
-  }
-}
-
-void Evebrain::setPenState(penState_t state){
-  penState = state;
-  servo_pulses_left = SERVO_PULSES;
-  next_servo_pulse = 0;
-}
-
-void Evebrain::followHandler(){
-  if(rightMotor.ready() && leftMotor.ready()){
-    int diff = leftLineSensor - rightLineSensor;
-    if(diff > 5){
-      if(hwVersion == 1){
-        right(1);
-      }else if(hwVersion == 2){
-        left(1);
-      }
-    }else if(diff < -5){
-      if(hwVersion == 1){
-        left(1);
-      }else if(hwVersion == 2){
-        right(1);
-      }
-    }else{
-      forward(5);
-    }
-  }
-}
-
-void Evebrain::collideHandler(){
-  readSensors();
-  if(_collideStatus == NORMAL){
-    if(leftCollide){
-      _collideStatus = LEFT_REVERSE;
-      back(50);
-    }else if(rightCollide){
-      _collideStatus = RIGHT_REVERSE;
-      back(50);
-    }else{
-      forward(10);
-    }
-  }else if(rightMotor.ready() && leftMotor.ready()){
-    switch(_collideStatus){
-      case LEFT_REVERSE :
-        _collideStatus = LEFT_TURN;
-        right(90);
-        break;
-      case RIGHT_REVERSE :
-        _collideStatus = RIGHT_TURN;
-        left(90);
-        break;
-      case LEFT_TURN :
-      case RIGHT_TURN :
-        _collideStatus = NORMAL;
-      case NORMAL :
-        break;
     }
   }
 }
@@ -793,116 +587,47 @@ void Evebrain::ledHandler(){
   led.setRGBA(LED_COLOUR_NORMAL, val);
 }
 
-void Evebrain::servoHandler(){
-  if(servo_pulses_left){
-    if(micros() >= next_servo_pulse){
-      servo_pulses_left--;
-      digitalWrite(SERVO_PIN, HIGH);
-      if(penState == UP){
-        next_servo_pulse = micros() + (12000 - penup_delay);
-        delayMicroseconds(penup_delay);
-      }else{
-        next_servo_pulse = micros() + (12000 - pendown_delay);
-        delayMicroseconds(pendown_delay);
-      }
-      digitalWrite(SERVO_PIN, LOW);
-    }
-  }
-}
-
 void Evebrain::autoHandler(){
-  if(following){
-    followHandler();
-  }else if(colliding){
-    collideHandler();
-  }
 }
 
-void Evebrain::readSensors(){
+void Evebrain::readSensors(byte pin){
   uint8_t temp[4];
-  if(millis() >= nextADCRead){
-    nextADCRead = millis() + 10;
+  // Fetch the data from the ADC
+  Wire.beginTransmission(PCF8591_ADDRESS); // wake up PCF8591
+  Wire.write(0x04); // control byte - read ADC0 and increment counter
+  Wire.endTransmission();
+  Wire.requestFrom(PCF8591_ADDRESS, 6);
+  Wire.read(); // Padding bytes to allow conversion to complete
+  Wire.read(); // Padding bytes to allow conversion to complete
+  temp[0] = Wire.read();
+  temp[1] = Wire.read();
+  temp[2] = Wire.read();
+  temp[3] = Wire.read();
 
-    // Fetch the data from the ADC
-    Wire.beginTransmission(PCF8591_ADDRESS); // wake up PCF8591
-    Wire.write(0x04); // control byte - read ADC0 and increment counter
-    Wire.endTransmission();
-    Wire.requestFrom(PCF8591_ADDRESS, 6);
-    Wire.read(); // Padding bytes to allow conversion to complete
-    Wire.read(); // Padding bytes to allow conversion to complete
-    temp[0] = Wire.read();
-    temp[1] = Wire.read();
-    temp[2] = Wire.read();
-    temp[3] = Wire.read();
-
-    // Sanity check to make sure I2C data hasn't gone out of sync
-    if((temp[2] == 0 || temp[2] == 255) && (temp[3] == 0 || temp[3] == 255)){
-      leftLineSensor = temp[0];
-      rightLineSensor = temp[1];
-
-      leftCollide = !!temp[2];
-      rightCollide = !!temp[3];
-    }
+  if(pin >=0 && pin <= 3){
+    analogSensor = temp[pin];
+  } else {
+    analogSensor = 0;
   }
-}
 
-void Evebrain::sensorNotifier(){
-  StaticJsonBuffer<60> outBuffer;
-  JsonObject& outMsg = outBuffer.createObject();
-  if(collideNotify){
-    collideState_t currentCollideState = collideState();
-    if(currentCollideState != lastCollideState){
-      lastCollideState = currentCollideState;
-      switch(currentCollideState){
-        case BOTH:
-          outMsg["msg"] = "both";
-          cmdProcessor.notify("collide", outMsg);
-          break;
-        case LEFT:
-          outMsg["msg"] = "left";
-          cmdProcessor.notify("collide", outMsg);
-          break;
-        case RIGHT:
-          outMsg["msg"] = "right";
-          cmdProcessor.notify("collide", outMsg);
-          break;
-      }
-    }
-  }
-  if(followNotify){
-    readSensors();
-    int currentFollowState = leftLineSensor - rightLineSensor;
-    if(currentFollowState != lastFollowState){
-      outMsg["msg"] = currentFollowState;
-      cmdProcessor.notify("follow", outMsg);
-    }
-    lastFollowState = currentFollowState;
-  }
+  timeTillComplete = millis() + 50;
+  nextADCRead = 1;
+  wait();
 }
 
 // This allows for runtime configuration of which hardware is used
 void Evebrain::version(char v){
   hwVersion = v;
   sprintf(versionStr, "%d.%s", hwVersion, Evebrain_SUB_VERSION);
-  if(v == 1){
-    steps_per_mm = STEPS_PER_MM_V1;
-    steps_per_degree = STEPS_PER_DEGREE_V1;
-    penup_delay = PENUP_DELAY_V1;
-    pendown_delay = PENDOWN_DELAY_V1;
-    wheel_distance = WHEEL_DISTANCE_V1;
-  }else{
-    steps_per_mm = STEPS_PER_MM_V2;
-    steps_per_degree = STEPS_PER_DEGREE_V2;
-    penup_delay = PENUP_DELAY_V2;
-    pendown_delay = PENDOWN_DELAY_V2;
-    wheel_distance = WHEEL_DISTANCE_V2;
-  }
+  steps_per_mm = STEPS_PER_MM_V2;
+  steps_per_degree = STEPS_PER_DEGREE_V2;
+  wheel_distance = WHEEL_DISTANCE_V2;
 }
 
 
 void Evebrain::networkNotifier(){
   if(!EvebrainWifi::networkChanged) return;
-  StaticJsonBuffer<800> outBuffer;
+  StaticJsonBuffer<500> outBuffer;
   JsonObject& outMsg = outBuffer.createObject();
   EvebrainWifi::networkChanged = false;
   _getConfig(outMsg, outMsg);
@@ -916,6 +641,8 @@ void Evebrain::wifiScanNotifier(){
   JsonArray& msg = outMsg.createNestedArray("msg");
   EvebrainWifi::wifiScanReady = false;
   wifi.getWifiScanData(msg);
+  timeTillComplete = millis() + 150;
+  wait();
   cmdProcessor.notify("wifiScan", outMsg);
 }
 
@@ -1008,6 +735,21 @@ void Evebrain::checkReady(){
       cmdProcessor.sendCompleteMSG(itoa(distanceVar, snum, 10));
       distanceRead = 0;
     } 
+    //buzzer is done
+    else if (buzzerBeep){
+      noTone(SPEAKER_PIN);
+      cmdProcessor.sendComplete();
+      buzzerBeep = 0;
+    } 
+    else if (servoMove){
+      servoid.detach();
+      cmdProcessor.sendComplete();
+      servoMove = 0;
+    }
+    else if (nextADCRead){
+      cmdProcessor.sendCompleteMSG(itoa(analogSensor, snum, 10));
+      nextADCRead = 0;
+    }
     //if there is no message on complete
     else {
       cmdProcessor.sendComplete();
@@ -1019,10 +761,8 @@ void Evebrain::checkReady(){
 
 void Evebrain::loop(){
   ledHandler();
-  servoHandler();
   autoHandler();
   calibrateHandler();
-  //sensorNotifier();
   networkNotifier();
   wifiScanNotifier();
   if(wifiEnabled){

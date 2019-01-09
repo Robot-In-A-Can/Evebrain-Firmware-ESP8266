@@ -6,6 +6,7 @@ var Mirobot = function(url){
   this.sensorState = {follow: null, collide: null};
   this.collideListening = false;
   this.followListening = false;
+  this.analogSensor = {level: 0};
 }
 
 Mirobot.prototype = {
@@ -182,6 +183,16 @@ Mirobot.prototype = {
     this.send({cmd: 'calibrateTurn', arg: "" + factor}, cb);
   },
 
+  analogInput: function(pin_number, cb){
+    var self = this;
+    this.send({cmd: 'analogInput', arg:pin_number}, function(state, msg){
+      if(state === 'complete' && undefined != msg){
+        self.analogSensor.level = msg.msg;
+        cb(self.analogSensor.level);
+      }
+    });
+  },
+
   collideState: function(cb){
     if(this.sensorState.collide === null || !this.collideListening){
       var self = this;
@@ -294,7 +305,7 @@ Mirobot.prototype = {
   send_msg: function(msg){
     var self = this;
     console.log(msg);
-    if(this.simulating && this.sim){
+    if( this.simulating && this.sim ){
       this.sim.send(msg, function(msg){ self.handle_msg(msg) });
     }else if(this.connected){
       this.ws.send(JSON.stringify(msg));
