@@ -341,11 +341,12 @@ Builder.prototype = {
       var context = canvas.getContext("2d");
       context.fillStyle = 'rgb(255,'+ (190-(Math.min(190,value/3))) +',10)';
       var yheight = (290*(parseInt(value,10)/1024))/2;
-      var imageData = context.getImageData(2, 0, context.canvas.width-2, context.canvas.height);
-      context.putImageData(imageData, 0, 0);
+      var imageData = context.getImageData(0, 0, context.canvas.width-2, context.canvas.height);
+      context.putImageData(imageData, 2, 0);
       // now clear the right-most pixels:
-      context.clearRect(context.canvas.width-2, 0, 2, context.canvas.height);
-      context.fillRect(298,0,2,yheight);
+      context.clearRect(0, 0, 2, context.canvas.height);
+      //now draw
+      context.fillRect(0,context.canvas.height-yheight,2,context.canvas.height);
     }); 
     this.graphicInterval = window.setTimeout(this.drawGraph(), 1500);
   },

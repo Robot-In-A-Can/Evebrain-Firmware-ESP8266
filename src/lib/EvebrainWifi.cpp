@@ -91,9 +91,9 @@ void EvebrainWifi::setupWifi(){
 
   // Set up the access point
   if(strlen(settings->ap_pass)){
-    WiFi.softAP(settings->ap_ssid, settings->ap_pass);
+    WiFi.softAP(settings->ap_ssid, settings->ap_pass);//Could add channel number if needed
   }else{
-    WiFi.softAP(settings->ap_ssid);
+    WiFi.softAP(settings->ap_ssid,"");
   }
 
   if(strlen(settings->sta_ssid)){

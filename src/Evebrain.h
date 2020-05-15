@@ -13,6 +13,7 @@
 #include "lib/EvebrainWebSocket.h"
 #include "lib/WS2812B.h"
 #include "lib/notes.h"
+#include "lib/OTA.h"
 
 #define FORCE_SETUP 0
 #define SERIAL_BUFFER_LENGTH 180

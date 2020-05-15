@@ -10,6 +10,7 @@ ShiftStepper rightMotor(1);
 ShiftStepper leftMotor(0);
 
 EvebrainWifi wifi;
+OTA ota;
 
 Servo servoid;
 
@@ -57,6 +58,8 @@ void Evebrain::begin(unsigned char v){
 
   // Pull the settings out of memory
   initSettings();
+
+  ota.setupOTA();
 }
 
 void Evebrain::begin(){
@@ -770,4 +773,5 @@ void Evebrain::loop(){
   }
   serialHandler();
   checkReady();
+  ota.runOTA();
 }

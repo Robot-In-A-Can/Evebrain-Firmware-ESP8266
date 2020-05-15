@@ -1,5 +1,5 @@
 body {
-  background-color: #332222;
+  background-color: #DDD;
   font-family: sans-serif;
 }
 a{
@@ -115,7 +115,7 @@ a{
   overflow:auto;
 }
 .editor .function{
-  background:#444;
+  background:rgb(14,29,59);
   border:1px solid #888;
   padding:10px;
   min-height:1.5em;
