@@ -99,7 +99,6 @@ void Evebrain::enableWifi(){
 }
 
 void Evebrain::initSettings(){
-  #if FORCE_SETUP
   if(EEPROM.read(EEPROM_OFFSET) == MAGIC_BYTE_1 && EEPROM.read(EEPROM_OFFSET + 1) == MAGIC_BYTE_2 && EEPROM.read(EEPROM_OFFSET + 2) == SETTINGS_VERSION){
     // We've previously written something valid to the EEPROM
     for (unsigned int t=0; t<sizeof(settings); t++){
@@ -113,9 +112,11 @@ void Evebrain::initSettings(){
        settings.turnCalibration > 0.5f &&
        settings.turnCalibration < 1.5f){
       // The values look OK so let's leave them as they are
-      return;
+      if (digitalRead(RESET) == 0) {
+        return;
+      }
     }
-  #endif
+  }
   // Either this is the first boot or the settings are bad so let's reset them
   settings.settingsVersion = SETTINGS_VERSION;
   settings.slackCalibration = 14;
@@ -133,9 +134,6 @@ void Evebrain::initSettings(){
   settings.ap_pass[0] = 0;
   settings.discovery = true;
   saveSettings();
-  #if FORCE_SETUP
-  }
-  #endif
 }
 
 void Evebrain::saveSettings(){

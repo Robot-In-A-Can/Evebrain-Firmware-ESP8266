@@ -15,7 +15,7 @@
 #include "lib/notes.h"
 #include "lib/OTA.h"
 
-#define FORCE_SETUP 0
+#define FORCE_SETUP 1
 #define SERIAL_BUFFER_LENGTH 180
 
 // The steppers have a gear ratio of 1:63.7 and have 32 steps per turn. 32 x 63.7 = 2038.4
@@ -41,9 +41,11 @@
 #define ECHOPIN 4
 #define SPEAKER_PIN 5
 #define SERVO_PIN 10
+#define SERVO_PIN_TWO 16
 #define SHIFT_REG_DATA  12
 #define SHIFT_REG_CLOCK 13
 #define SHIFT_REG_LATCH 14
+#define RESET 13
 
 #define STATUS_LED_PIN 15
 #define LED_PULSE_TIME 6000.0
