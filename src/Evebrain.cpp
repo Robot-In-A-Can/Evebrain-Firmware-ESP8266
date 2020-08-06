@@ -181,6 +181,7 @@ void Evebrain::initCmds(){
   cmdProcessor.addCmd("rightMotorF",      &Evebrain::_rightMotorForward,false);
   cmdProcessor.addCmd("rightMotorB",      &Evebrain::_rightMotorBackward,false);
   cmdProcessor.addCmd("servo",            &Evebrain::_servo,            false);
+  cmdProcessor.addCmd("servoII",          &Evebrain::_servoII,          false);
   cmdProcessor.addCmd("getConfig",        &Evebrain::_getConfig,        true);
   cmdProcessor.addCmd("setConfig",        &Evebrain::_setConfig,        true);
   cmdProcessor.addCmd("resetConfig",      &Evebrain::_resetConfig,      true);
@@ -264,7 +265,11 @@ void Evebrain::_rightMotorBackward(ArduinoJson::JsonObject &inJson, ArduinoJson:
 }
 
 void Evebrain::_servo(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
-  servo(atoi(inJson["arg"].asString()));
+  servo(atoi(inJson["arg"].asString()),0);
+}
+
+void Evebrain::_servoII(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
+  servo(atoi(inJson["arg"].asString()),1);
 }
 
 void Evebrain::_beep(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
@@ -541,9 +546,10 @@ void Evebrain::leftMotorForward(int distance){
   wait();
 }
 
-void Evebrain::servo(int angle){
+void Evebrain::servo(int angle, int pin){
   // Set up the servo
-  servoid.attach(SERVO_PIN);
+  if(pin == 0){ servoid.attach(SERVO_PIN);}
+  if(pin == 1){ servoid.attach(SERVO_PIN_TWO);}
   servoid.write(angle);
   timeTillComplete = millis() + 1000;
   wait();

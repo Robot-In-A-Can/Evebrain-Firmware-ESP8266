@@ -7,6 +7,8 @@ var minify = require('html-minifier').minify;
 
 var files = [
   {name: "index.html", process: true},
+  {name: "logo.html", process: true},
+  {name: "turtle.svg", process: true},
   {name: "favicon.ico", process: false}
 ]
 var fileCount = files.length;

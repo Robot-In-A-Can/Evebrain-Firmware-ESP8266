@@ -38,13 +38,14 @@ class EvebrainRequestHandler: public AsyncWebHandler {
                 return strlen_P(files[i].content+alreadySent); // Return from here to end of document
               }
             );
+            //response->addHeader("content-encoding", "gzip, deflate");
             request->send(response);
             found = true;
             break;
           }
         }
         // If we get here, send a 404
-        if(!found) request->send(404, "text/plain", "Not Found");
+        if(!found) request->send(404, "text/html", "<h1>404</h1> This is not the page you are looking for...");
       }
     }
 };
