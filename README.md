@@ -24,6 +24,8 @@ in order to provide the Websocket functionality.
 
 This is a branch of the Mirobot project (http://mirobot.io)
 
+## To use this script you must use version 2.3.0 of the ESP toolchain in the Arduino IDE
+
 # Building new web blob for EveBrain
 
 - Web sorce files are in  ./web/
