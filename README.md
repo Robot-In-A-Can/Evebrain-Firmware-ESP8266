@@ -1,5 +1,6 @@
-Robot In A Can Evebrain Firmware
+# Robot In A Can Evebrain Firmware
 ================================
+## v0.1.0
 
 This is an Arduino library that allows you to control the Robot In A Can Evebrain (http://robotinacan.com).
 
@@ -23,7 +24,7 @@ in order to provide the Websocket functionality.
 
 This is a branch of the Mirobot project (http://mirobot.io)
 
-# Buildinng new web blob for EveBrain
+# Building new web blob for EveBrain
 
 - Web sorce files are in  ./web/
 - Build using `node ./build-web.js`
