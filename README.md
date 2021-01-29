@@ -2,7 +2,7 @@
 ================================
 ## v0.1.0
 
-###working on new app for snap on the eBrain
+### working on new app for snap on the eBrain
 
 This is an Arduino library that allows you to control the Robot In A Can Evebrain (http://robotinacan.com).
 
