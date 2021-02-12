@@ -71,3 +71,9 @@ Change Flash size to 4M
 
 * Q: How do I get around error `Multiple libraries were found for "Servo.h"`
   A: Change the Flashsize to 4M 
+  
+* Q: What's the deal with `warning: espcomm_sync failed`
+
+  A: You're trying to flash your board at to high a baud rate. Drop it down a level and try again. It should work for all setups at a speed of 115200 but some users are able to upload at a speed 921600. 
+
+* 
