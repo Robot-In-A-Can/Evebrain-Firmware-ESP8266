@@ -52,7 +52,11 @@ your home dir Documents/Arduino/libraries
 
 # Write to board
 
+set board power to 0 (for usb)
+
 connect gnd to pin 0
+
+connect usb from computer to board
 
 # Clear board memory
 
