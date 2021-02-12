@@ -30,3 +30,28 @@ This is a branch of the Mirobot project (http://mirobot.io)
 - Build using `node ./build-web.js`
 - this will take all things in ./web/index.html and blob them
 - blob is stored in src/lib/web.h
+
+# Add this repo to your Arduino Libraries folder
+
+
+## On Linux
+
+If you are using Snaps to install Arduino on Linux this is
+~/snap/arduino/current/Arduino/libraries
+
+
+## on Mac
+
+~/Documents/Arduino/libraries
+
+## on windows this
+
+your home dir Documents/Arduino/libraries
+
+# Write to board
+
+connect gnd to pin 0
+
+# Clear board memory
+
+3.3 to pin 13
