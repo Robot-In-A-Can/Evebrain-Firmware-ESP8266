@@ -58,6 +58,10 @@ connect gnd to pin 0
 
 connect usb from computer to board
 
+In arduino select the port you are connected to
+
+Change Flash size to 4M
+
 # Clear board memory
 
 3.3 to pin 13
