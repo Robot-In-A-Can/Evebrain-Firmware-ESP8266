@@ -65,3 +65,9 @@ Change Flash size to 4M
 # Clear board memory
 
 3.3 to pin 13
+
+
+# FAQ
+
+* Q: How do I get around error `Multiple libraries were found for "Servo.h"`
+  A: Change the Flashsize to 4M 
