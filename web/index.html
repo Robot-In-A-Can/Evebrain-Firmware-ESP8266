@@ -3,14 +3,55 @@
 <head>
   <meta charset="utf-8">
   <title>Evebrain Control</title>
-  <meta name="viewport" content="width=900, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=0.8">
   <link rel="stylesheet" href="base.css">
   <link rel="stylesheet" href="ui.css">
   <link rel="stylesheet" href="flag-icon.css">
   <link rel="stylesheet" href="font-awesome.css">
+  <link rel="stylesheet" href="./wizard-style.css">
 </head>
 <body>
-  
+  <div x-data="{ 
+    openMenu: true ,
+    section: 'Learn',
+    menuItems: ['Connect','Build','Code','Learn','Play']
+    }">
+
+<nav role="navigation">
+<div id="menuToggle">
+<!--
+hidden checkbox is used as click reciever,
+so you can use the :checked selector on it.
+-->
+<input type="checkbox" x-bind:checked="openMenu"/>
+
+<!--
+Some spans to act as a hamburger.
+
+They are acting like a real hamburger,
+not that McDonalds stuff.
+-->
+<span></span>
+<span></span>
+<span></span>
+<ul id="wizard" x-on:click="closeMenu()">
+<li><h1>eBrain</h1></li>
+<template x-for="id in menuItems">
+ <a :class="{ 'active': section === id }" x-on:click="section = id">
+   <li x-text="id"></li>
+ </a>
+</template>
+
+</ul>
+</div>
+</nav>
+
+<div class="wizardContent">
+
+<div x-show="section === 'Connect'">
+
+<h1>Connect</h1>
+
 <div id="header">
   <div id="menu">
     <div id="sim" class="menuItem hidden"></div>
@@ -22,20 +63,52 @@
   </div>
   <h1 class="title"></h1>
 </div>
-  <div id="wsMsg" class="modal" style="display:none">
+<div id="wsMsg" class="modal" style="display:none">
     <div class="content">
       <h3>Your browser does not support Mirobot</h3>
       <p>Mirobot uses a feature called WebSockets in order to control it from your browser.</p>
       <p>Unfortunately your web browser does not support this.</p>
       <p>Any recent version of the major browsers should work without problems. If you're not sure what to use, <a href="https://www.google.com/chrome/browser/">Google Chrome</a> is a good start.</p>
     </div>
-  </div>
+</div>
+</div>
+<div x-show="section === 'Build'" style="height: inherit;">
+<h1>Build and comand your bot with builder.js.</h1>
+<p>Builder.JS is a simple programing environment that currently works on desktop.</p>
+</div>
+
+<div x-show="section === 'Code'">
+<h1>Start Coding with Logo</h1>
+<p>Logo Commands can move the Turtle:  
+  fd – forward,
+  bk – backward,
+  rt – right,
+  lt – left,
+  pd -pendown,
+  pu - penup. 
+  Learn more at <a href="https://snap.robotinacan.com">eBrain LOGO</a>
+  </p>
+<iframe src="logo.html" style="width: 100%; height: calc(100% - 11em)"></iframe>
+</div>
+
+<div x-show="section === 'Learn'">
+<h1>Learn</h1>
+<p>
+Proin tortor sem, rhoncus sed vulputate ac, maximus sit amet odio. Donec efficitur nec tortor non ultricies. In sed lorem egestas, venenatis metus at, vehicula nisl. Pellentesque nec dictum nulla. Nam auctor semper malesuada. Sed condimentum volutpat leo id consequat. Fusce volutpat magna ante, at sagittis leo convallis vel. Proin consequat vel nibh vel ornare. Mauris finibus orci suscipit condimentum faucibus. Fusce in sem tincidunt, facilisis purus non, semper enim. Pellentesque aliquam massa at commodo commodo. Nulla nec aliquam dui. Nam varius mattis nunc non vehicula. Praesent sollicitudin, quam et tincidunt laoreet, arcu orci ullamcorper ipsum, vel consectetur ante sem sed elit. Curabitur at efficitur urna. </p>
+</div>
+
+<div x-show="section === 'Play'">
+<h1>Play</h1>
+<p>
+Proin tortor sem, rhoncus sed vulputate ac, maximus sit amet odio. Donec efficitur nec tortor non ultricies. In sed lorem egestas, venenatis metus at, vehicula nisl. Pellentesque nec dictum nulla. Nam auctor semper malesuada. Sed condimentum volutpat leo id consequat. Fusce volutpat magna ante, at sagittis leo convallis vel. Proin consequat vel nibh vel ornare. Mauris finibus orci suscipit condimentum faucibus. Fusce in sem tincidunt, facilisis purus non, semper enim. Pellentesque aliquam massa at commodo commodo. Nulla nec aliquam dui. Nam varius mattis nunc non vehicula. Praesent sollicitudin, quam et tincidunt laoreet, arcu orci ullamcorper ipsum, vel consectetur ante sem sed elit. Curabitur at efficitur urna. </p>
+</div>
+</div>  
+
   <div id="app">
     <div id="code"></div>
   </div>
 
-  <iframe src="logo.html" style="position: absolute; top: 80px; right: 0px; width: 100vh; height: 100vh;"></iframe>
-
+  
   <script type="text/javascript" src="l10n.min.js"></script>
   <script type="text/javascript" src="localisations.js"></script>
   <script type="text/javascript" src="FileSaver.min.js"></script>
@@ -50,6 +123,7 @@
   <script type="text/javascript" src="persist.js"></script>
   <script type="text/javascript" src="builder.js"></script>
   <script type="text/javascript" src="snack.sortableList.js"></script>
+  <script src='./alpine.min.js'></script><script  src="./wizard-scripting.js"></script>
   <script type="text/javascript">
   /*
    

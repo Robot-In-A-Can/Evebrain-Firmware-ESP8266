@@ -133,7 +133,12 @@ a.active li::after {
 .wizardContent{
   padding: 3em 2.5em;
 }
-
+.wizardContent>div{
+  padding: 3em 2.5em;
+  z-index: 3000;
+  min-height: -webkit-fill-available;
+  height: 100vh;
+}
 [x-cloak] {
     display: none !important;
 }
