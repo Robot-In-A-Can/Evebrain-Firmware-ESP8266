@@ -109,14 +109,14 @@ border-top-right-radius: 10px;
   color:#666;
 }
 #menu .menuItem:hover{
-  background-color:#DDD;
+  /*background-color:#DDD;*/
 }
 #menu .menuItem:hover .icon{
   text-decoration:none;
   color:#000;
 }
 #menu .menuItem:hover .subMenu{
-  background-color:#DDD;
+  /*background-color:#DDD;*/
 }
 
 #menu .show .wrapper{
@@ -124,14 +124,19 @@ border-top-right-radius: 10px;
 }
 
 #menu .wrapper{
-  display:none;
-  background-color:#FCFCFC;
-  right:0;
-  position:absolute;
-  margin-top:10px;
-  text-align:left;
+  display: none;
+  background-color: rgb(35, 35, 35);
+  left: 0;
+  z-index: 300;
+  width: 100vw;
+  position: fixed;
+  margin-top: 10px;
+  text-align: left;;
 }
 
+ul.subMenu {
+  list-style-type: none
+}
 
 ul.subMenu li{
   text-align:left;
@@ -139,14 +144,7 @@ ul.subMenu li{
   min-width:200px;
   cursor:pointer;
 }
-ul.subMenu li:hover{
-  background-color:#EEE;
-  cursor:pointer;
-}
-ul.subMenu li.inactive:hover{
-  background-color:#DDD;
-  cursor:pointer;
-}
+
 ul.subMenu li.inactive{
   text-decoration:none;
 }
@@ -326,13 +324,4 @@ ul.subMenu li.inactive{
 #conf .showAdvanced{
   font-size:90%;
 }
-#conf p.small{
-  color:#999;
-  font-size:80%;
-}
-#menu #conf.menuItem .wrapper{
-  background:#DDD;
-}
-#menu #conf.menuItem li, #menu #conf.menuItem li:hover{
-  background:#DDD;
-}
+

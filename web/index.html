@@ -14,7 +14,8 @@
   <div x-data="{ 
     openMenu: true ,
     section: 'Connect',
-    menuItems: ['Connect','Build','Code','Learn','Play']
+    menuItems: ['Connect','Build','Code','Learn','Play'],
+    config: 'My Config...'
     }">
 
 <nav role="navigation">
@@ -51,15 +52,16 @@ not that McDonalds stuff.
 <div x-show="section === 'Connect'">
 
 <h1>Connect</h1>
+<p x-text="config"></p>
 
 <div id="header">
   <div id="menu">
     <div id="sim" class="menuItem hidden"></div>
     <div id="fullscreen" class="menuItem"><i class="icon fa fa-expand fa-2x"></i></div>
-    <div id="conn" class="menuItem"><i class="icon fa fa-wifi fa-2x"></i></div>
+    <div id="conn" class="menuItem"><i class="icon fa fa-cog fa-2x"></i></div>
     <div id="l10n" class="menuItem hidden"><i class="icon fa fa-globe fa-2x"></i></div>
     <div id="save" class="menuItem hidden"><i class="icon fa fa-save fa-2x"></i></div>
-    <div id="conf" class="menuItem"><i class="icon fa fa-cog fa-2x"></i></div>
+    <div id="conf" class="menuItem"><i class="icon fa fa-wifi fa-2x"></i></div>
   </div>
   <h1 class="title"></h1>
 </div>
@@ -125,195 +127,7 @@ Proin tortor sem, rhoncus sed vulputate ac, maximus sit amet odio. Donec efficit
   <script type="text/javascript" src="snack.sortableList.js"></script>
   <script src='./alpine.min.js'></script><script  src="./wizard-scripting.js"></script>
   <script type="text/javascript">
-  /*
-   
-    var $;
-    var has_remote_conn = true;
-    var remote_base = 'http://mirobot.io/assets/mirobot_js/';
-    var mirobot;
 
-
-    // load script function with callback to handle synchronicity 
-    var loadScript = function( src, script, base_url, callback, errback ){
-      var loaded = false;
-      var errored = false;
-      var timeout;
-      script = document.createElement('script');
-      var noload = function(err) {
-        // handling error when loading script
-        if(!loaded && !errored && errback){
-          errback();
-        }
-        errored = true;
-      }
-      script.onerror = noload
-      script.onload = function(){
-        loaded = true;
-        delete timeout;
-        callback();
-      }
-      script.src = base_url + src;
-      document.getElementsByTagName('head')[0].appendChild(script);
-      window.setTimeout(noload, 3000);
-    }
-
-    // In case console logging kills the browser
-    if(typeof window.console === 'undefined'){ window.console = {log: function(){}}; }
-
-    var localApp = function(){
-      console.log('Loading local app');
-
-      has_remote_conn = false;
-      var configTimeout;
-
-      var el = function(id){
-        return document.getElementById(id);
-      }
-
-      var qs = function(s){
-        return document.querySelector(s);
-      }
-
-      var qsa = function(s){
-        return document.querySelectorAll(s);
-      }
-
-      var hideModal = function(modal){
-        el(modal).style.display = 'none';
-        // unbind the event
-        document.body.onkeyup = undefined;
-      }
-
-      updateWirelessConfig = function(config){
-        wirelessConfig = config;
-
-        var conn = el('wifiConnState');
-        if(wirelessConfig.clientConnected === '0' || wirelessConfig.clientIp === '0.0.0.0'){
-          conn.innerHTML = '&#10007; Configure WiFi';
-          conn.className = 'connState';
-          checkConfig(10000);
-        }else{
-          conn.innerHTML = '&#10003; Connected to WiFi';
-          conn.className = 'connState connected';
-          checkConfig(60000);
-        }
-      }
-
-      window.hideWiFiConfig = function(){
-        hideModal('configFrame');
-        checkConfig(10000);
-      }
-
-      var escEvent = function(event, modal){
-        if (event.which === 27) { // 27 == "esc"
-          // hide the dialog
-          hideModal(modal);
-        }
-      }
-
-      var showModal = function(src){
-        qs('#configContent iframe').src = src;
-        el('configFrame').style.display = 'block';
-        el('configContent').onclick = function(e){e.stopPropagation()};
-        el('configFrame').onclick = function(){hideModal('configFrame');checkConfig();};
-        document.body.onkeyup = function(e){ escEvent(e, 'configFrame');checkConfig();};
-      }
-
-      var configureWifi = function(e){
-        e.preventDefault();
-        showModal('/admin/wifi.html?arduino=' + versions.arduino);
-      }
-
-      var updateFirmware = function(e){
-        e.preventDefault();
-        if(has_remote_conn) showModal('/admin/update.html?arduino=' + versions.arduino);
-      }
-
-      var setVersions = function(){
-        var versionString = '<a href="#">WiFi version: ' + versions.wifi + " | Firmware version: " + (versions.arduino || 'unknown') + " | UI version: " + versions.ui + '</a>';
-        el('version').innerHTML = versionString;
-        qs('#version a').onclick = updateFirmware
-      }
-
-      var getVersion = function(){
-        mirobot.version(function(state, msg){
-          if(msg.msg){
-            versions.arduino = msg.msg;
-          }
-          setVersions();
-        });
-      }
-
-      var initProgram = function(){
-        var host = hashConfig['m'] || window.location.hostname;
-        mirobot = new Mirobot('ws://' + host + ':8899/websocket');
-        var builder = new Builder($('#code'), mirobot);
-
-        var mirobotHandler = function(state){
-          var conn = $('#miroConnState');
-          if(state === 'connected'){
-            if(!versions.arduino){
-              window.setTimeout(getVersion, 1000);
-            }
-            conn[0].innerHTML = '&#10003; Connected to Mirobot';
-            conn.addClass('connected');
-          }else if(state === 'disconnected'){
-            if(mirobot.error){
-              conn[0].innerHTML = '&#10007; Too many connections to Mirobot';
-            }else{
-              conn[0].innerHTML = '&#10007; Couldn\'t connect to Mirobot';
-            }
-            conn.removeClass('connected');
-          }else if(state === 'error'){
-            conn[0].innerHTML = '&#10007; Too many connections to Mirobot';
-            conn.removeClass('connected');
-          }
-          conn.removeClass('initial');
-        }
-        mirobot.addListener(mirobotHandler);
-      }
-
-      var checkConfig = function(delay){
-        var fn = function(){
-          var xhr = new XMLHttpRequest();
-          xhr.open('get', '/admin/settings.json', true);
-          xhr.onreadystatechange = function() {
-            var data;
-            if (xhr.readyState == 4 && xhr.status == 200) {
-              updateWirelessConfig(JSON.parse(xhr.responseText));
-            }
-          };
-          xhr.send();
-        }
-        if(delay){
-          if(configTimeout) window.clearTimeout(configTimeout);
-          configTimeout = window.setTimeout(fn, delay);
-        }else{
-          fn();
-        }
-      }
-
-      $ = snack.wrap;
-      initProgram();
-      updateWirelessConfig(wirelessConfig);
-      el('wifiConnState').onclick = configureWifi;
-      setVersions();
-
-      if(hashConfig['l'] !== 'true' && window.location.hostname != '10.10.100.254'){
-        // Useful in the future for adding functionality without upgrades
-        loadScript('remote2.js', undefined, remote_base, function(){
-          has_remote_conn = true;
-        });
-      }
-    }
-
-    if(typeof(WebSocket) !== "undefined"){
-      window.addEventListener('load', localApp);
-    }else{
-      document.getElementById('wsMsg').style.display = 'block';
-    }
-    */
-    
 window.hashConfig = {};
 if(window.location.hash !== ''){
   window.location.hash.replace('#', '').split('&').map(function(el){

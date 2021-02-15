@@ -115,11 +115,11 @@ a{
   overflow:auto;
 }
 .editor .function{
-  background:rgb(14,29,59);
-  border:1px solid #888;
-  padding:10px;
-  min-height:1.5em;
-  color: #FFF;
+  background: rgb(14,29,59);
+  border: 1px solid hsl(219deg 22% 40%);
+  padding: 10px;
+  min-height: 1.5em;
+  color: #FFF;;
 }
 .editor .program .function.running{
   background:#F00;
@@ -131,8 +131,8 @@ a{
   margin:0 0 10px;
 }
 .editor .fn-repeat ol{
-  min-height:1.5em;
-  border:1px solid #888;
+  min-height:2em;
+  border:1px solid hsl(218deg 22% 40%);
 }
 .editor .dragged {
   position: absolute;
