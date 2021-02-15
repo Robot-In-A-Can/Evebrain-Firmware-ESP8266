@@ -42,7 +42,7 @@ Special thanks to the Mirobot project (http://mirobot.io)
 -  Open Boards Manager from Tools > Board menu and find `esp8266`  platform.
 -  Select the `2.3.0` version from a drop-down box.
 -  Click the *install* button.
--  Don't forget to select your ESP8266 board from the Tools > Board menu after installation.
+-  Select `Generic ESP8266 Module` from the `Tools > Board > ESP8266 Modules` menu after installation.
 
 For more details on Arduino's Board Manager, see:
 - https://www.arduino.cc/en/guide/cores
