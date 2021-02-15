@@ -127,12 +127,13 @@ MirobotConfigMenu = function(mirobot, options){
       net.innerHTML = '<option value="">' + l(':scanning') + '</option>'
       net.disabled = true;
     }else{
+      console.log(this.networks)
       if(this.networks.length > 0){
         this.el.querySelector('#staSsid').innerHTML = this.networks.map(function(n){
           var s = '<option value="' + n[0] + '"';
           if(n[0] === self.conf.sta_ssid) s += ' selected="selected"';
           s += '>' + n[0]
-          if(n[0] === self.conf.sta_ssid) s += ' [connected]';
+          if(n[0] === self.conf.sta_ssid) s += ' [selected]';
           s += '</option>';
           return s
         });
