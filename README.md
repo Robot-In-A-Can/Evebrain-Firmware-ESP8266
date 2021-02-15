@@ -79,4 +79,8 @@ Change Flash size to 4M
 
 * Q: How do I build the web interface for flashing to the board?
   
-  A: After tweaking things in ./web run `node ./build-web.js` from the project's home dir.
+  A: ./web is gets compressed using our build-web.js script. Before doing this make your life easier n install all the requred packages using `yarn install`.
+  
+     Tweak any files you want to work on.
+  
+     After tweaking things in ./web run `node ./build-web.js` from the project's home dir.
