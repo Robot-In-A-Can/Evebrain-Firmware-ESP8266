@@ -18,6 +18,7 @@ Mirobot.prototype = {
   sim: undefined,
 
   connect: function(url){
+    if(url === "ws://127.0.0.1:8899/websocket") url = "ws://192.168.4.1:8899/websocket";
     if(url) this.url = url;
     if(!this.connected && !this.error && this.url){
       var self = this;
