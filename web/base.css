@@ -74,9 +74,6 @@ border-top-right-radius: 10px;
   color:#666;
 }
 .wrapper{
-  -webkit-box-shadow: 0 0 12px 0  rgba(0,0,0,0.4);
-  -moz-box-shadow: 0 0 12px 0  rgba(0,0,0,0.4);
-  box-shadow: 0 0 12px 0 rgba(0,0,0,0.4);
   position:absolute;
 }
 
@@ -95,7 +92,7 @@ border-top-right-radius: 10px;
 #menu .menuItem{
   display:inline-block;
   padding:10px 5px 13px;
-  background:#EEE;
+  /*background:#EEE;*/
   height:100%;
   margin:0;
   border:0;
@@ -113,7 +110,7 @@ border-top-right-radius: 10px;
 }
 #menu .menuItem:hover .icon{
   text-decoration:none;
-  color:#000;
+  color:#666;
 }
 #menu .menuItem:hover .subMenu{
   /*background-color:#DDD;*/
@@ -198,20 +195,19 @@ ul.subMenu li.inactive{
 
 #simArea{
   visibility:hidden;
-  min-width:150px;
-  min-height:150px;
   width: 300px;
   height:300px;
-  position: absolute;
+  position: fixed;
   background:#EEE;
-  top:70px;
-  right:10px;
+  bottom: 0;
+  left: 0;
   border:2px solid #AAA;
-  -webkit-box-shadow: 0 0 12px 0  rgba(0,0,0,0.4);
-  -moz-box-shadow: 0 0 12px 0  rgba(0,0,0,0.4);
-  box-shadow: 0 0 12px 0 rgba(0,0,0,0.4);
-  z-index:5000;
 }
+
+#simArea > div.settings > label:nth-child(2){
+  display:none
+}
+
 #simArea canvas{
   width:100%;
   height: 100%;
@@ -262,14 +258,11 @@ ul.subMenu li.inactive{
 
 #sim.menuItem{
   font-size:120%;
-  padding:17px 10px 13px;
+  padding:17px 0 13px;
 }
 #sim.menuItem span{
-  display:inline-block;
-  margin:3px 5px 0;
   vertical-align:top;
-  color: rgba(0,0,0,0.6);
-  text-shadow: 3px 3px 3px rgba(255,255,255,0.1);
+  padding-right: 0.5em
 }
 
 .onoffswitch {
@@ -282,11 +275,16 @@ ul.subMenu li.inactive{
   display: none;
 }
 .onoffswitch-label {
-  display: block; overflow: hidden; cursor: pointer;
-  height: 19px; padding: 0; line-height: 19px;
-  border: 2px solid #CCCCCC; border-radius: 19px;
-  background-color: #EBEBEB;
-  transition: background-color 0.3s ease-in;
+  display: block;
+  overflow: hidden;
+  cursor: pointer;
+  height: 19px;
+  padding: 0;
+  line-height: 19px;
+  border: 2px solid #CCCCCC;
+  border-radius: 19px;
+  background-color: #888;
+  transition: background-color 0.3s ease-in;;
 }
 .onoffswitch-label:before {
   content: "";
@@ -298,10 +296,10 @@ ul.subMenu li.inactive{
   transition: all 0.3s ease-in 0s;
 }
 .onoffswitch-checkbox:checked + .onoffswitch-label {
-  background-color: #49E845;
+  background-color: rgb(120, 201, 119);
 }
 .onoffswitch-checkbox:checked + .onoffswitch-label, .onoffswitch-checkbox:checked + .onoffswitch-label:before {
-  border-color: #49E845;
+  border-color: rgb(120, 201, 119);
 }
 .onoffswitch-checkbox:checked + .onoffswitch-label:before {
   right: 0px;
