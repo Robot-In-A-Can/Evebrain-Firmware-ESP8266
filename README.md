@@ -24,17 +24,33 @@ in order to provide the Websocket functionality.
 
 This is a branch of the Mirobot project (http://mirobot.io)
 
-## To use this script you must use version 2.3.0 of the ESP toolchain in the Arduino IDE
 
-# Building new web blob for EveBrain
+Prerequisites
+~~~~~~~~~~~~~
 
-- Web sorce files are in  ./web/
-- Build using `node ./build-web.js`
-- this will take all things in ./web/index.html and blob them
-- blob is stored in src/lib/web.h
+-  Arduino 1.6.8, get it from `Arduino
+   website <https://www.arduino.cc/en/Main/OldSoftwareReleases#previous>`__.
+-  Internet connection
+-  Python 3 interpreter (Mac/Linux only, Windows installation supplies its own)
+
+Instructions
+~~~~~~~~~~~~
+
+- Open the Preferences window in your Arduino IDE.
+-  Enter 
+   ``https://arduino.esp8266.com/stable/package_esp8266com_index.json``
+   into *Additional Board Manager URLs* field. You can add multiple
+   URLs, separating them with commas.
+-  Open Boards Manager from Tools > Board menu and find *esp8266*  platform.
+-  Select the version you need from a drop-down box.
+-  Click the *install* button.
+-  Don't forget to select your ESP8266 board from the Tools > Board menu after installation.
+
+For more details on Arduino's Board Manager, see:
+- https://www.arduino.cc/en/guide/cores
+
 
 # Add this repo to your Arduino Libraries folder
-
 
 ## On Linux
 
@@ -65,6 +81,16 @@ Change Flash size to 4M
 # Clear board memory
 
 3.3 to pin 13
+
+
+# Building new web blob for EveBrain
+
+- Web sorce files are in  ./web/
+- Build using `node ./build-web.js`
+- this will take all things in ./web/index.html and blob them
+- blob is stored in src/lib/web.h
+
+
 
 
 # FAQ
