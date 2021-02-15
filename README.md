@@ -1,9 +1,9 @@
 # Robot In A Can Evebrain Firmware
-================================
+
+
 ## v0.1.0
 
 This is an Arduino library that allows you to control the Robot In A Can Evebrain (http://robotinacan.com).
-
 
 
 It can be used in one of two ways;
@@ -70,10 +70,13 @@ Change Flash size to 4M
 # FAQ
 
 * Q: How do I get around error `Multiple libraries were found for "Servo.h"`
+
   A: Change the Flashsize to 4M 
   
 * Q: What's the deal with `warning: espcomm_sync failed`
 
   A: You're trying to flash your board at to high a baud rate. Drop it down a level and try again. It should work for all setups at a speed of 115200 but some users are able to upload at a speed 921600. 
 
-* 
+* Q: How do I build the web interface for flashing to the board?
+  
+  A: After tweaking things in ./web run `node ./build-web.js` from the project's home dir.
