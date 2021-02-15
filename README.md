@@ -25,16 +25,14 @@ in order to provide the Websocket functionality.
 Special thanks to the Mirobot project (http://mirobot.io)
 
 
-Prerequisites
-~~~~~~~~~~~~~
+## Prerequisites
 
--  Arduino 1.6.8, get it from `Arduino
+-  Arduino >= 1.6.8, get it from `Arduino
    website <https://www.arduino.cc/en/Main/OldSoftwareReleases#previous>`__.
 -  Internet connection
 -  Python 3 interpreter (Mac/Linux only, Windows installation supplies its own)
 
-Instructions
-~~~~~~~~~~~~
+## Instructions
 
 - Open the Preferences window in your Arduino IDE.
 -  Enter 
@@ -50,23 +48,23 @@ For more details on Arduino's Board Manager, see:
 - https://www.arduino.cc/en/guide/cores
 
 
-# Add this repo to your Arduino Libraries folder
+## Add this repo to your Arduino Libraries folder
 
-## On Linux
+### On Linux
 
 If you are using Snaps to install Arduino on Linux this is
 ~/snap/arduino/current/Arduino/libraries
 
 
-## on Mac
+### on Mac
 
 ~/Documents/Arduino/libraries
 
-## on windows this
+### on windows this
 
 your home dir Documents/Arduino/libraries
 
-# Write to board
+## Write to board
 
 set board power to 0 (for usb)
 
