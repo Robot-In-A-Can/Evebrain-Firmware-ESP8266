@@ -22,7 +22,7 @@ It uses the SHA1 and Base64 libraries from
 https://github.com/ejeklint/ArduinoWebsocketServer
 in order to provide the Websocket functionality.
 
-This is a branch of the Mirobot project (http://mirobot.io)
+Special thanks to the Mirobot project (http://mirobot.io)
 
 
 Prerequisites
@@ -41,8 +41,8 @@ Instructions
    ``https://arduino.esp8266.com/stable/package_esp8266com_index.json``
    into *Additional Board Manager URLs* field. You can add multiple
    URLs, separating them with commas.
--  Open Boards Manager from Tools > Board menu and find *esp8266*  platform.
--  Select the version you need from a drop-down box.
+-  Open Boards Manager from Tools > Board menu and find `esp8266`  platform.
+-  Select the `2.3.0` version from a drop-down box.
 -  Click the *install* button.
 -  Don't forget to select your ESP8266 board from the Tools > Board menu after installation.
 
@@ -86,11 +86,10 @@ Change Flash size to 4M
 # Building new web blob for EveBrain
 
 - Web sorce files are in  ./web/
-- Build using `node ./build-web.js`
+- `yarn install` to install required libraries
+- `node ./build-web.js` to compress the web folder into a blob for flashing
 - this will take all things in ./web/index.html and blob them
 - blob is stored in src/lib/web.h
-
-
 
 
 # FAQ
