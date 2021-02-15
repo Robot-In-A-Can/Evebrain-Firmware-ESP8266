@@ -34,15 +34,16 @@ Special thanks to the Mirobot project (http://mirobot.io)
 
 ## Instructions
 
-- Open the Preferences window in your Arduino IDE.
--  Enter 
+1. Open the Preferences window in your Arduino IDE.
+1. Enter 
    ``https://arduino.esp8266.com/stable/package_esp8266com_index.json``
    into *Additional Board Manager URLs* field. You can add multiple
    URLs, separating them with commas.
--  Open Boards Manager from Tools > Board menu and find `esp8266`  platform.
--  Select the `2.3.0` version from a drop-down box.
--  Click the *install* button.
--  Select `Generic ESP8266 Module` from the `Tools > Board > ESP8266 Modules` menu after installation.
+1. Open Boards Manager from Tools > Board menu and find `esp8266`  platform.
+1. Select the `2.3.0` version from a drop-down box.
+1. Click the *install* button.
+1. Select `Generic ESP8266 Module` from the `Tools > Board > ESP8266 Modules` menu after installation.
+2.  Select `4M (3M SPIFFS)` from the `Tools > Flash Size:` menu.
 
 For more details on Arduino's Board Manager, see:
 - https://www.arduino.cc/en/guide/cores
@@ -56,6 +57,10 @@ For more information on the Library manger, including deleting and updating info
 * On Linux and you are using Snaps to install Arduino your libraries folder is `~/snap/arduino/current/Arduino/libraries`. 
 * On a Mac `~/Documents/Arduino/libraries`
 * On windows it wil be in your home dir Documents/Arduino/libraries
+
+## Write new firmware
+
+* Start with an example found in `File > Examples`
 
 ## Write to board
 
