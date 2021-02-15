@@ -37,16 +37,15 @@ a{
 
 #graph {
   width:300px;
-  height: 300px;
+  height: 250px;
   background:#CCC;
-  border:1px solid #000;
+  border:0;
 }
 
 .editor .right{
   border:1px solid #000;
   background:#CCC;
   margin-left:310px;
-  max-width:600px;
   position:relative;
 }
 .editor .buttons{
@@ -57,6 +56,7 @@ a{
 }
 .editor .programWrapper{
   overflow:auto;
+  height: calc(100vh - 18em) !important ;
 }
 .editor .buttons button{
   color:#FFF;
@@ -163,7 +163,8 @@ body.dragging, body.dragging * {
   padding:3px;
   min-width:130px;
   text-align:center;
-  min-height:3em;
+  height:3em;
+  margin-top: -2em;
 }
 .editor .extra button:active{
   background: #DDD;
