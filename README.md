@@ -50,19 +50,12 @@ For more details on Arduino's Board Manager, see:
 
 ## Add this repo to your Arduino Libraries folder
 
-### On Linux
+**Heads up!** In previous version of the Arduino IDE, all libraries were stored together deep within the contents folder of the Arduino application. However, in newer versions of the IDE, libraries added through the Library Manger can be found in a folder named '**libraries**' found in your Arduino Sketchbook folder.  
+For more information on the Library manger, including deleting and updating info, visit the [GitHub: Arduino - Library Manager FAQ](https://github.com/arduino/Arduino/wiki/Library-Manager-FAQ).
 
-If you are using Snaps to install Arduino on Linux this is
-~/snap/arduino/current/Arduino/libraries
-
-
-### on Mac
-
-~/Documents/Arduino/libraries
-
-### on windows this
-
-your home dir Documents/Arduino/libraries
+* On Linux and you are using Snaps to install Arduino your libraries folder is `~/snap/arduino/current/Arduino/libraries`. 
+* On a Mac `~/Documents/Arduino/libraries`
+* On windows it wil be in your home dir Documents/Arduino/libraries
 
 ## Write to board
 
