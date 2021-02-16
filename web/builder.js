@@ -108,7 +108,7 @@ Builder.prototype = {
       }
       e.preventDefault();
     }, false);
-    this.analog = $('.editor #analog');
+    this.analog = $('#analog');
     this.runner = $('.editor .run');
     this.pause = $('.editor .pause');
     this.stop = $('.editor .stop');
@@ -433,11 +433,6 @@ Builder.prototype.mainUI = function(){
   return '<div class="left container">\
   <h2>' + l(':toolbox') + '</h2>\
   <ol class="functionList"></ol>\
-  <div class="extra">\
-    <h2> A0 </h2>\
-    <canvas id="graph"></canvas>\
-    <center><button id="analog">&#9654;Graph</button></center>\
-  </div>\
 </div>\
 <div class="right container">\
   <h2>' + l(':program') + '</h2>\

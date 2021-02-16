@@ -101,9 +101,11 @@ At Robot in a Can, our fundamental goal is to give learners access to engaging, 
 
 <div x-show="section === 'Play'">
 <h1>Play</h1>
+
 <div class="gb">
     <div class="outScreen">
         <div class="inScreen">
+          <canvas id="graph"></canvas>
         </div>
     </div>
     <div class="label">
@@ -125,7 +127,7 @@ At Robot in a Can, our fundamental goal is to give learners access to engaging, 
     </div>
     <div class="centerButtons">
         <button type="button" class="select">select</button>
-        <button type="button" class="start">start</button>
+        <button type="button" class="start" id="analog">&#9654;Graph</button>
     </div>
     <div class="actionButtons">
         <button type="button" class="A">A</button>
