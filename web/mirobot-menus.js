@@ -162,6 +162,7 @@ MirobotConfigMenu = function(mirobot, options){
       document.querySelector('#manualNet').classList.toggle('hidden', this.conf.sta_dhcp);
       this.el.querySelector('.ip').innerHTML = this.conf.sta_ip;
       document.getElementById("IPinfo").innerHTML = this.conf.sta_ip;
+      document.querySelector('[x-data]').__x.$data.config = this.conf.sta_ip;
       // Update the manual network settings if we're not using DHCP
       if(!this.conf.sta_dhcp){
         // STA Fixed IP
