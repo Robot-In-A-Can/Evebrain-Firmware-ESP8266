@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "dependencies": {
     "html-minifier": "^1.2.0",
-    "mime-types": "^2.1.10",
+    "mime-types": "^2.1.28",
     "web-resource-inliner": "^1.2.1"
   }
 }
