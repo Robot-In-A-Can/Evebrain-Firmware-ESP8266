@@ -101,11 +101,36 @@ Proin tortor sem, rhoncus sed vulputate ac, maximus sit amet odio. Donec efficit
 
 <div x-show="section === 'Play'">
 <h1>Play</h1>
-<p>
-Proin tortor sem, rhoncus sed vulputate ac, maximus sit amet odio. Donec efficitur nec tortor non ultricies. In sed lorem egestas, venenatis metus at, vehicula nisl. Pellentesque nec dictum nulla. Nam auctor semper malesuada. Sed condimentum volutpat leo id consequat. Fusce volutpat magna ante, at sagittis leo convallis vel. Proin consequat vel nibh vel ornare. Mauris finibus orci suscipit condimentum faucibus. Fusce in sem tincidunt, facilisis purus non, semper enim. Pellentesque aliquam massa at commodo commodo. Nulla nec aliquam dui. Nam varius mattis nunc non vehicula. Praesent sollicitudin, quam et tincidunt laoreet, arcu orci ullamcorper ipsum, vel consectetur ante sem sed elit. Curabitur at efficitur urna. </p>
-
-<div>
-  <button onclick="Evebrain">Forward</button>
+<div class="gb">
+    <div class="outScreen">
+        <div class="inScreen">
+        </div>
+    </div>
+    <div class="label">
+        Deathray GAME TOY
+    </div>
+    <div class="dpad">
+        <button type="button" class="left" onclick="builder.mirobot.send({arg:'15',cmd:'left'});">
+            &#9664;
+        </button>
+        <button type="button" class="up" onclick="builder.mirobot.send({arg:'20',cmd:'forward'});">
+            &#9650;
+        </button>
+        <button type="button" class="down" onclick="builder.mirobot.send({arg:'20',cmd:'back'});">
+            &#9660;
+        </button>
+        <button type="button" class="right" onclick="builder.mirobot.send({arg:'15',cmd:'right'});">
+            &#9654;
+        </button>
+    </div>
+    <div class="centerButtons">
+        <button type="button" class="select">select</button>
+        <button type="button" class="start">start</button>
+    </div>
+    <div class="actionButtons">
+        <button type="button" class="A">A</button>
+        <button type="button" class="B">B</button>
+    </div>
 </div>
 </div>
 </div>  

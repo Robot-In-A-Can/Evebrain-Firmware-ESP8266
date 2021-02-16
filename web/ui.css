@@ -182,3 +182,104 @@ body.dragging, body.dragging * {
 .editor .extra button:focus{
   outline: 0;
 }
+
+.gb {
+    display: inline-block;
+    padding: 10px;
+    background-color: #aaa;
+    border-radius: 10px 10px 50px 10px;
+}
+.gb button {
+    border: 0;
+    background-color: #222;
+}
+.gb button:hover {
+    cursor: pointer;
+}
+.outScreen {
+    padding: 20px 40px;
+    background-color: #444;
+    border-radius: 10px 10px 30px 10px;
+}
+.gb:before {
+    display: block;
+    content: " ";
+    width: 100%;
+    border-top: solid 2px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+}
+.inScreen {
+    width: 160px;
+    height: 144px;
+    background-color: #aaffaa;
+}
+.label {
+    text-align: left;
+    font-family: sans-serif;
+}
+.dpad {
+    float: left;
+    position: relative;
+    padding: 5px;
+    width: 60px; height: 60px;
+    margin: 25px 20px 0 0;
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 40px;
+}
+.dpad:before {
+    display: block;
+    content: " ";
+    position: absolute;
+    top: 25px; left: 25px;
+    height: 20px; width: 20px;
+    background-color: #222;
+    
+}
+.dpad button {
+    width: 20px; height: 20px;
+    position: absolute;
+    border-radius: 2px;
+}
+
+.dpad .left {
+    top: 25px; left: 5px;
+    border-radius: 2px 0 0 2px;
+}
+.dpad .up {
+    top: 5px; left: 25px;
+    border-radius: 2px 2px 0 0;
+}
+.dpad .down {
+    bottom: 5px; left: 25px;   
+    border-radius: 0 0 2px 2px;
+}
+.dpad .right {
+    top: 25px; right: 5px;   
+    border-radius: 0 2px 2px 0;
+}
+.centerButtons {
+    float: left;
+    margin: 110px 0 40px -10px;
+}
+.centerButtons button {
+    background-color: #444;
+    width: 30px; height: 10px;
+    border-radius: 10px;
+    transform:rotate(-30deg);
+}
+.actionButtons {
+    display: inline-block;
+    float: right;
+    margin: 35px 0 0 0;
+    padding: 5px;
+    background-color: rgba(0,0,0,0.1);
+    transform:rotate(-30deg);
+    border-radius: 30px;
+}
+.actionButtons button {
+    background-color: #cc4444;
+    margin: 5px;
+    height: 30px;
+    width: 30px;
+    border-radius: 30px;
+}
