@@ -6,6 +6,10 @@ a{
   color:#333;
 }
 #configure{ display:none}
+#app {
+  width:75%;
+  margin-left: 12.5%;
+}
 .editor{
   display:block;
   min-width:600px;
@@ -42,6 +46,9 @@ a{
   border:0;
 }
 
+#analog {
+  margin-top: 30px;
+}
 .editor .right{
   border:1px solid #000;
   background:#CCC;

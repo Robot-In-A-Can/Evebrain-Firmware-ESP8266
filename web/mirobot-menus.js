@@ -147,8 +147,14 @@ MirobotConfigMenu = function(mirobot, options){
       // Update the icon
       if(this.conf.sta_ip !== '0.0.0.0'){
         this.el.classList.add('connected');
+        document.getElementById("IPinfo").innerHTML = this.conf.sta_ip;
+        document.getElementById("IPinfo").style.fontSize = "xx-large";
+        document.getElementById("IPinfo").style.color = "green";
       }else{
         this.el.classList.remove('connected');
+        document.getElementById("IPinfo").innerHTML = "My Config...";
+        document.getElementById("IPinfo").style.fontSize = "x-small";
+        document.getElementById("IPinfo").style.color = "#cdcdcd";
       }
       // Update the other network settings
       // DHCP setting

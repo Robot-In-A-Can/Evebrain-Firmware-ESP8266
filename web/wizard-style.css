@@ -74,7 +74,7 @@ a.active li::after {
   position: relative;
   background: #cdcdcd;
   border-radius: 3px;
-  z-index: 1;
+  z-index: 1000;
   transform-origin: 4px 0px;
   transition: transform 0.5s cubic-bezier(0.77, 0.2, 0.05, 1),
     background 0.5s cubic-bezier(0.77, 0.2, 0.05, 1), opacity 0.55s ease;
@@ -123,6 +123,11 @@ a.active li::after {
   text-align: center;
   padding-left:0
 }
+
+#wizard li h1{
+  color:#2977bc;
+}
+/*
 /*
  * And let's slide it in from the left
  */
@@ -142,4 +147,7 @@ a.active li::after {
 }
 [x-cloak] {
     display: none !important;
+}
+
+#IPinfo {
 }
