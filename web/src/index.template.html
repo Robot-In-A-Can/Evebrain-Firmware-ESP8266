@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>eBrain Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="base.css">
+  <link rel="stylesheet" href="ui.css">
+  <link rel="stylesheet" href="flag-icon.css">
+  <link rel="stylesheet" href="font-awesome.css">
+  <link rel="stylesheet" href="./wizard-style.css">
+</head>
+<body>
+<!-- partial:index.partial.html -->
+
+<!-- partial -->
+<script type="text/javascript" src="l10n.min.js"></script>
+<script type="text/javascript" src="localisations.js"></script>
+<script type="text/javascript" src="FileSaver.min.js"></script>
+<script type="text/javascript" src="snack.js"></script>
+<script type="text/javascript" src="mirobot.js"></script>
+<script type="text/javascript" src="mirobot-save.js"></script>
+<script type="text/javascript" src="mirobot-menus.js"></script>
+<script type="text/javascript" src="mirobot-localapp.js"></script>
+<script type="text/javascript" src="mirobot-sim.js"></script>
+<script type="text/javascript" src="polyfills.min.js"></script>
+<script type="text/javascript" src="main.js"></script>
+<script type="text/javascript" src="persist.js"></script>
+<script type="text/javascript" src="builder.js"></script>
+<script type="text/javascript" src="snack.sortableList.js"></script>
+<script type="text/javascript" src='./alpine.min.js'></script>
+<script type="text/javascript" src="./wizard-scripting.js"></script>
+<script type="text/javascript" src='./blockly.min.js'></script>
+<script type="text/javascript">
+
+window.hashConfig = {};
+if(window.location.hash !== ''){
+window.location.hash.replace('#', '').split('&').map(function(el){
+  var split = el.split('=');
+  hashConfig[split[0]] = split[1];
+});
+}
+
+var $ = snack.wrap;
+var builder, app;
+
+window.addEventListener('load', function(){
+initL10n();
+app  = new MirobotApp({
+  l10n: true,
+  languages: baseLanguages,
+  simulation: true
+});
+builder = new Builder($('#code'), undefined, true);
+builder.setMirobot(app.mirobot);
+
+app.initPersistence({
+  saveHandler: function(){ return builder.saveProgram(); },
+  loadHandler: function(prog){ return builder.loadProgram(prog); },
+  clearHandler: function(){ return builder.clearProgram(); }
+});
+});
+</script>
+</body>
+</html>

@@ -13,7 +13,7 @@ var files = [
 ]
 var fileCount = files.length;
 
-var baseDir = './web/';
+var baseDir = './web/dist/';
 var outFile = './src/lib/web.h';
 
 var minifySettings = {minifyJS: true, minifyCSS: true}

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>eBrain Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="base.css">
+  <link rel="stylesheet" href="ui.css">
+  <link rel="stylesheet" href="flag-icon.css">
+  <link rel="stylesheet" href="font-awesome.css">
+  <link rel="stylesheet" href="./wizard-style.css">
+</head>
+<body>
+<div
+  x-data="{ 
+  openMenu: true ,
+  section: 'Connect',
+  menuItems: ['Connect','Build','Code','Learn','Play'],
+  config: 'My Config...'
+  }"
+>
+  <nav role="navigation">
+    <div id="menuToggle">
+      <!--
+hidden checkbox is used as click reciever,
+so you can use the :checked selector on it.
+-->
+      <input type="checkbox" x-bind:checked="openMenu" />
+
+      <!--
+Some spans to act as a hamburger.
+
+They are acting like a real hamburger,
+not that McDonalds stuff.
+-->
+      <span></span>
+      <span></span>
+      <span></span>
+      <ul id="wizard" x-on:click="closeMenu()">
+        <li><h1>eBrain</h1></li>
+        <template x-for="id in menuItems">
+          <a :class="{ 'active': section === id }" x-on:click="section = id">
+            <li x-text="id"></li>
+          </a>
+        </template>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="wizardContent">
+    <div x-show="section === 'Connect'">
+      <h1>Connect</h1>
+      <p x-text="config" id="IPinfo"></p>
+
+      <div id="header">
+        <div id="menu">
+          <div id="sim" class="menuItem hidden"></div>
+          <div id="fullscreen" class="menuItem">
+            <i class="icon fa fa-expand fa-2x"></i>
+          </div>
+          <div id="conn" class="menuItem">
+            <i class="icon fa fa-cog fa-2x"></i>
+          </div>
+          <div id="l10n" class="menuItem hidden">
+            <i class="icon fa fa-globe fa-2x"></i>
+          </div>
+          <div id="save" class="menuItem hidden">
+            <i class="icon fa fa-save fa-2x"></i>
+          </div>
+          <div id="conf" class="menuItem">
+            <i class="icon fa fa-wifi fa-2x"></i>
+          </div>
+        </div>
+        <h1 class="title"></h1>
+      </div>
+      <div id="wsMsg" class="modal" style="display: none">
+        <div class="content">
+          <h3>Your browser does not support Mirobot</h3>
+          <p>
+            Mirobot uses a feature called WebSockets in order to control it from
+            your browser.
+          </p>
+          <p>Unfortunately your web browser does not support this.</p>
+          <p>
+            Any recent version of the major browsers should work without
+            problems. If you're not sure what to use,
+            <a href="https://www.google.com/chrome/browser/">Google Chrome</a>
+            is a good start.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div x-show="section === 'Build'" style="height: inherit">
+      <h1>Build and comand your bot with builder.js.</h1>
+      <p>
+        Builder.JS is a simple programing environment that currently works on
+        desktop.
+      </p>
+    </div>
+
+    <div x-show="section === 'Code'">
+      <h1>Start Coding with Logo</h1>
+      <p>
+        Logo Commands can move the Turtle: fd – forward, bk – backward, rt –
+        right, lt – left, pd -pendown, pu - penup. Learn more at
+        <a href="https://snap.robotinacan.com">eBrain LOGO</a>
+      </p>
+      <iframe
+        src="logo.html"
+        style="width: 100%; height: calc(100% - 18em); margin-bottom: 2em"
+      ></iframe>
+    </div>
+
+    <div x-show="section === 'Learn'">
+      <h1>Learn</h1>
+      <p>
+        At Robot in a Can, our fundamental goal is to give learners access to
+        engaging, low-cost and easy-to-navigate tools that will make Science,
+        Technology, Engineering, Arts and Mathematics (STEAM) education
+        inspiring and approachable.
+      </p>
+    </div>
+
+    <div x-show="section === 'Play'">
+      <h1>Play</h1>
+
+      <div class="gb">
+        <div class="outScreen">
+          <div class="inScreen">
+            <canvas id="graph"></canvas>
+          </div>
+        </div>
+        <div class="label">Robot In A Can Controller</div>
+        <div class="dpad">
+          <button
+            type="button"
+            class="left"
+            onclick="builder.mirobot.send({arg:'15',cmd:'left'});"
+          >
+            &#9664;
+          </button>
+          <button
+            type="button"
+            class="up"
+            onclick="builder.mirobot.send({arg:'20',cmd:'forward'});"
+          >
+            &#9650;
+          </button>
+          <button
+            type="button"
+            class="down"
+            onclick="builder.mirobot.send({arg:'20',cmd:'back'});"
+          >
+            &#9660;
+          </button>
+          <button
+            type="button"
+            class="right"
+            onclick="builder.mirobot.send({arg:'15',cmd:'right'});"
+          >
+            &#9654;
+          </button>
+        </div>
+        <div class="centerButtons">
+          <button type="button" class="select">select</button>
+          <button type="button" class="start" id="analog">&#9654;Graph</button>
+        </div>
+        <div class="actionButtons">
+          <button type="button" class="A">A</button>
+          <button type="button" class="B">B</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript" src="l10n.min.js"></script>
+<script type="text/javascript" src="localisations.js"></script>
+<script type="text/javascript" src="FileSaver.min.js"></script>
+<script type="text/javascript" src="snack.js"></script>
+<script type="text/javascript" src="mirobot.js"></script>
+<script type="text/javascript" src="mirobot-save.js"></script>
+<script type="text/javascript" src="mirobot-menus.js"></script>
+<script type="text/javascript" src="mirobot-localapp.js"></script>
+<script type="text/javascript" src="mirobot-sim.js"></script>
+<script type="text/javascript" src="polyfills.min.js"></script>
+<script type="text/javascript" src="main.js"></script>
+<script type="text/javascript" src="persist.js"></script>
+<script type="text/javascript" src="builder.js"></script>
+<script type="text/javascript" src="snack.sortableList.js"></script>
+<script type="text/javascript" src='./alpine.min.js'></script>
+<script type="text/javascript" src="./wizard-scripting.js"></script>
+<script type="text/javascript">
+
+window.hashConfig = {};
+if(window.location.hash !== ''){
+window.location.hash.replace('#', '').split('&').map(function(el){
+  var split = el.split('=');
+  hashConfig[split[0]] = split[1];
+});
+}
+
+var $ = snack.wrap;
+var builder, app;
+
+window.addEventListener('load', function(){
+initL10n();
+app  = new MirobotApp({
+  l10n: true,
+  languages: baseLanguages,
+  simulation: true
+});
+builder = new Builder($('#code'), undefined, true);
+builder.setMirobot(app.mirobot);
+
+app.initPersistence({
+  saveHandler: function(){ return builder.saveProgram(); },
+  loadHandler: function(prog){ return builder.loadProgram(prog); },
+  clearHandler: function(){ return builder.clearProgram(); }
+});
+});
+</script>
+</body>
+</html>
