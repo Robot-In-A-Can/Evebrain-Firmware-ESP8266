@@ -1,11 +1,16 @@
 body {
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  overflow-x: hidden;
   background: #232323;
   color: #cdcdcd;
   font-family: "Avenir Next", "Avenir", sans-serif;
 }
+
+[x-cloak] {
+  display: none !important;
+}
+
 .wizard {
   padding: 5em;
 }

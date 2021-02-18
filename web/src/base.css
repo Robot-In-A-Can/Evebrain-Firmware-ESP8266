@@ -1,7 +1,6 @@
 html, body{
   font-family: sans-serif;
   margin: 0;
-  overflow: hidden;
 }
 
 .title {
@@ -323,3 +322,6 @@ ul.subMenu li.inactive{
   font-size:90%;
 }
 
+.disable-dbl-tap-zoom {
+  touch-action: manipulation;
+}

@@ -48,7 +48,7 @@ not that McDonalds stuff.
   </nav>
 
   <div class="wizardContent">
-    <div x-show="section === 'Connect'">
+    <div x-show="section === 'Connect'" x-cloak>
       <h1>Connect</h1>
       <p x-text="config" id="IPinfo"></p>
 
@@ -73,6 +73,26 @@ not that McDonalds stuff.
         </div>
         <h1 class="title"></h1>
       </div>
+      <div>
+        <p>This release is dedicated to the Preville Robotics Winter Class of 2021</p>
+        <p> Cette version du firmware est dédiée à la classe de robotique Préville de l'hiver 2021</p>
+        <ul>
+          <li>Charles	Dixon</li>
+          <li>Thomas	Harpur</li>
+          <li>Daniella	Mezzacappa</li>
+          <li>Luca	Negrete</li>
+          <li>Victor	Pareé</li>
+          <li>Sahej	Tak</li>
+          <li>Alexander	Tom</li>
+          
+          <li>Frédéric	Blais</li>
+          <li>Ella	Haslehurst</li>
+          <li>Amanda	Rabouin</li>
+          <li>Kassandra	Théorêt</li>
+          <li>Sienna	Wallace</li>
+          <li>Ruppert	Yu</li>
+        </ul>
+      </div>
       <div id="wsMsg" class="modal" style="display: none">
         <div class="content">
           <h3>Your browser does not support Mirobot</h3>
@@ -90,7 +110,7 @@ not that McDonalds stuff.
         </div>
       </div>
     </div>
-    <div x-show="section === 'Build'" style="height: inherit">
+    <div x-show="section === 'Build'" x-cloak>
       <h1>Build and comand your bot with builder.js.</h1>
       <p>
         Builder.JS is a simple programing environment that currently works on
@@ -98,7 +118,7 @@ not that McDonalds stuff.
       </p>
     </div>
 
-    <div x-show="section === 'Code'">
+    <div x-show="section === 'Code'" x-cloak>
       <h1>Start Coding with Logo</h1>
       <p>
         Logo Commands can move the Turtle: fd – forward, bk – backward, rt –
@@ -111,7 +131,7 @@ not that McDonalds stuff.
       ></iframe>
     </div>
 
-    <div x-show="section === 'Learn'">
+    <div x-show="section === 'Learn'" x-cloak>
       <h1>Learn</h1>
       <p>
         At Robot in a Can, our fundamental goal is to give learners access to
@@ -121,7 +141,7 @@ not that McDonalds stuff.
       </p>
     </div>
 
-    <div x-show="section === 'Play'">
+    <div x-show="section === 'Play'" x-cloak class="disable-dbl-tap-zoom">
       <h1>Play</h1>
 
       <div class="gb">
@@ -186,11 +206,14 @@ not that McDonalds stuff.
 <script type="text/javascript" src="polyfills.min.js"></script>
 <script type="text/javascript" src="main.js"></script>
 <script type="text/javascript" src="persist.js"></script>
-<script type="text/javascript" src="builder.js"></script>
 <script type="text/javascript" src="snack.sortableList.js"></script>
 <script type="text/javascript" src='./alpine.min.js'></script>
-<script type="text/javascript" src="./wizard-scripting.js"></script>
+<script type="text/javascript" src="./wizard-scripting.js"></script> 
 <script type="text/javascript">
+//Remove gestures
+document.addEventListener('gesturestart', function (e) {
+    e.preventDefault();
+});
 
 window.hashConfig = {};
 if(window.location.hash !== ''){

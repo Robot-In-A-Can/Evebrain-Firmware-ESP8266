@@ -26,12 +26,14 @@
 <script type="text/javascript" src="polyfills.min.js"></script>
 <script type="text/javascript" src="main.js"></script>
 <script type="text/javascript" src="persist.js"></script>
-<script type="text/javascript" src="builder.js"></script>
 <script type="text/javascript" src="snack.sortableList.js"></script>
 <script type="text/javascript" src='./alpine.min.js'></script>
-<script type="text/javascript" src="./wizard-scripting.js"></script>
-<script type="text/javascript" src='./blockly.min.js'></script>
+<script type="text/javascript" src="./wizard-scripting.js"></script> 
 <script type="text/javascript">
+//Remove gestures
+document.addEventListener('gesturestart', function (e) {
+    e.preventDefault();
+});
 
 window.hashConfig = {};
 if(window.location.hash !== ''){
