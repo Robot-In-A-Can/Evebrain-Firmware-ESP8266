@@ -56,7 +56,7 @@ For more information on the Library manger, including deleting and updating info
 
 * On Linux and you are using Snaps to install Arduino your libraries folder is `~/snap/arduino/current/Arduino/libraries`. 
 * On a Mac `~/Documents/Arduino/libraries`
-* On windows it wil be in your home dir Documents/Arduino/libraries
+* On windows it wil be in your home dir `Documents/Arduino/libraries`
 
 ## Write new firmware
 
