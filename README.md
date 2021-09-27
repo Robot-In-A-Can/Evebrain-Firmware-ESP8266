@@ -105,3 +105,48 @@ Change Flash size to 4M
      Tweak any files you want to work on.
   
      After tweaking things in ./web run `node ./build-web.js` from the project's home dir.
+
+
+
+
+#List of Supported eBrain Commands
+
+Command Name         does this command take time to run?
+
+"version",           true
+"ping",              true
+"uptime",            true
+"resume",            true
+"slackCalibration",  true
+"moveCalibration",   true
+"turnCalibration",   true
+"calibrateMove",     true
+"calibrateTurn",     true
+"forward",           false
+"back",              false
+"right",             false
+"left",              false
+"beep",              false
+"calibrateSlack",    false
+"analogInput",       true
+"readSensors",       false
+"digitalInput",      true
+"gpio_on",           true
+"gpio_off",          true
+"gpio_pwm_16",       true
+"gpio_pwm_5",        true
+"gpio_pwm_10",       true
+"temperature",       false
+"humidity",          false
+"distanceSensor",    false
+"leftMotorF",        false
+"leftMotorB",        false
+"rightMotorF",       false
+"rightMotorB",       false
+"servo",             false
+"servoII",           false
+"getConfig",         true
+"setConfig",         true
+"resetConfig",       true
+"freeHeap",          true
+"startWifiScan",     true
