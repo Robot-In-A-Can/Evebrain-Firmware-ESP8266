@@ -150,3 +150,4 @@ Command Name         does this command take time to run?
 "resetConfig",       true
 "freeHeap",          true
 "startWifiScan",     true
+"postToServer",      true

@@ -7,6 +7,7 @@
 #include "lib/ArduinoJson/ArduinoJson.h"
 #include <EEPROM.h>
 #include <Servo.h>
+#include <ESP8266HTTPClient.h>
 #include "Wire.h"
 #include "lib/ShiftStepper.h"
 #include "lib/EvebrainWifi.h"
@@ -14,6 +15,7 @@
 #include "lib/WS2812B.h"
 #include "lib/notes.h"
 #include "lib/OTA.h"
+#include <WiFiClientSecureBearSSL.h>
 
 #define FORCE_SETUP 1
 #define SERIAL_BUFFER_LENGTH 180
@@ -101,6 +103,7 @@ class Evebrain {
     void temperature();
     void humidity();
     void distanceSensor();
+    void postToServer();
     void readSensors(byte);
     boolean ready();
     void loop();
@@ -159,6 +162,7 @@ class Evebrain {
     void _gpio_pwm_10(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _gpio_pwm_5(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _distanceSensor(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
+    void _postToServer(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _getConfig(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _setConfig(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _resetConfig(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
@@ -175,6 +179,9 @@ class Evebrain {
     boolean buzzerBeep;
     boolean servoMove;
     boolean nextADCRead;
+    boolean doPost;
+    char hostServer[64];
+    int serverRequestTime;
     byte servoPosition;
     unsigned long lastLedChange;
     Evebrain& self() { return *this; }

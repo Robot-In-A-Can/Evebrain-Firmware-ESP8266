@@ -2,6 +2,7 @@
 #include "Evebrain.h"
 #include "lib/DHT/DHTesp.h"
 
+
 DHTesp dht;
 CmdProcessor cmdProcessor;
 SerialWebSocket v1ws(Serial);
@@ -40,6 +41,9 @@ Evebrain::Evebrain(){
   humidityRead = 0;
   temperatureRead = 0;
   distanceRead = 0;
+  doPost = 0;
+  hostServer[0] = 0;
+  serverRequestTime = 0;
   servoMove = 0;
   buzzerBeep = 0;
   wifiEnabled = false;
@@ -176,6 +180,7 @@ void Evebrain::initCmds(){
   cmdProcessor.addCmd("temperature",      &Evebrain::_temperature,      false);
   cmdProcessor.addCmd("humidity",         &Evebrain::_humidity,         false);
   cmdProcessor.addCmd("distanceSensor",   &Evebrain::_distanceSensor,   false);
+  cmdProcessor.addCmd("postToServer",     &Evebrain::_postToServer,     false);
   cmdProcessor.addCmd("leftMotorF",       &Evebrain::_leftMotorForward, false);
   cmdProcessor.addCmd("leftMotorB",       &Evebrain::_leftMotorBackward,false);
   cmdProcessor.addCmd("rightMotorF",      &Evebrain::_rightMotorForward,false);
@@ -294,6 +299,25 @@ void Evebrain::_readSensors(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonOb
 
 void Evebrain::_distanceSensor(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
   distanceSensor();
+}
+
+void Evebrain::_postToServer(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
+  //if(!(inJson.containsKey("arg") && inJson["arg"].is<JsonObject&>())) return;
+
+  // Set doPost byte if eBrain will post in intervals or just once
+  if(inJson["arg"].asObject().containsKey("onOff")){
+    doPost = atoi(inJson["arg"]["onOff"]);
+  }
+  // Set the host server to send updates to
+  if(inJson["arg"].asObject().containsKey("server")){
+    strcpy(hostServer, inJson["arg"]["server"]);
+  }
+  // Change the frequency of posts to the server
+  if(inJson["arg"].asObject().containsKey("time")){
+    serverRequestTime = atoi(inJson["arg"]["time"])*1000;
+  }
+
+  postToServer();
 }
 
 void Evebrain::_temperature(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
@@ -519,6 +543,35 @@ void Evebrain::distanceSensor(){
   wait();
 }
 
+void Evebrain::postToServer(){
+  doPost = 1;
+  // Fingerprint
+  const uint8_t fingerprint[20] = {0x56, 0x03, 0xf0, 0x21, 0x8b, 0x25, 0xad, 0x7b, 0xbd, 0xdf, 0x5d, 0x03, 0x65, 0x52, 0x84, 0x0a, 0x5f, 0xff, 0x46, 0x74};
+
+
+  if (doPost == 1){
+    std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
+    client->setFingerprint(fingerprint);
+    HTTPClient http;
+    if (http.begin(*client, "https://json.robotinacan.com/posts")) {
+      http.addHeader("Content-Type", "application/json");
+      int httpCode = http.POST("{\"message\":\"Hello\",\"author\":\"ESP\"}");
+      http.end();
+      Serial.println(httpCode);
+    } else {
+      //unable to connect
+      Serial.println("noPOST");
+    }
+  }
+
+  Serial.println(doPost);
+  Serial.println(hostServer);
+  Serial.println(serverRequestTime);
+
+  timeTillComplete = millis() + 10000;
+  wait();
+}
+
 short Evebrain::digitalInput(byte pin){
   digitalWrite(pin, LOW);
   pinMode(pin, INPUT); 
@@ -729,7 +782,6 @@ void Evebrain::checkReady(){
       temperatureVar = dht.getTemperature();
       cmdProcessor.sendCompleteMSG(itoa(temperatureVar, snum, 10));
       temperatureRead = 0;
-      Serial.println(temperatureVar);
     }
     //if humidity is ready
     else if (humidityRead){
@@ -756,6 +808,9 @@ void Evebrain::checkReady(){
     else if (nextADCRead){
       cmdProcessor.sendCompleteMSG(itoa(analogSensor, snum, 10));
       nextADCRead = 0;
+    }
+    else if (doPost){
+      postToServer();
     }
     //if there is no message on complete
     else {
