@@ -73,6 +73,9 @@ struct EvebrainSettings {
   char         ap_ssid[32];
   char         ap_pass[64];
   bool         discovery;
+  bool         doPost;
+  char         hostServer[64];
+  byte         serverRequestTime;
 };
 
 class Evebrain {
@@ -179,9 +182,6 @@ class Evebrain {
     boolean buzzerBeep;
     boolean servoMove;
     boolean nextADCRead;
-    boolean doPost;
-    char hostServer[64];
-    int serverRequestTime;
     byte servoPosition;
     unsigned long lastLedChange;
     Evebrain& self() { return *this; }
