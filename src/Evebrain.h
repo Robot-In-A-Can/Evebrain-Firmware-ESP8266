@@ -38,6 +38,7 @@
 #define MAGIC_BYTE_2 0x0D
 #define SETTINGS_VERSION 1
 
+#define SERVO_PULSES 30
 #define DHTPIN 16 
 #define TRIGPIN 5
 #define ECHOPIN 4
@@ -120,7 +121,7 @@ class Evebrain {
   private:
     void wait();
     void ledHandler();
-    void autoHandler();
+    void servoHandler();
     void networkNotifier();
     void wifiScanNotifier();
     void sensorNotifier();
@@ -183,6 +184,8 @@ class Evebrain {
     boolean servoMove;
     boolean nextADCRead;
     byte servoPosition;
+    unsigned long next_servo_pulse;
+    unsigned char servo_pulses_left;
     unsigned long lastLedChange;
     Evebrain& self() { return *this; }
     void takeUpSlack(byte, byte);

@@ -13,7 +13,7 @@ ShiftStepper leftMotor(0);
 EvebrainWifi wifi;
 OTA ota;
 
-Servo servoid;
+Servo servoOne;
 
 WS2812B led(STATUS_LED_PIN);
 
@@ -45,6 +45,7 @@ Evebrain::Evebrain(){
   distanceRead = 0;
   distanceVar = 0;
   servoMove = 0;
+  servoPosition = 0;
   buzzerBeep = 0;
   wifiEnabled = false;
 }
@@ -567,10 +568,10 @@ void Evebrain::postToServer(){
       sprintf(post,"{\"analog\":\" %d \",\"digital_pins\":\" %s \",\"distance\":\" %d \",\"temperature\":\" %.2f \",\"humidity\":\" %.2f \",\"author\":\" %s \"}",analog,pinState,distanceVar,temperatureVar,humidityVar,settings.ap_ssid);
       int httpCode = http.POST(post);
       http.end();
-      Serial.println(httpCode);
+      //Serial.println(httpCode);
     } else {
       //unable to connect
-      Serial.println("Unable to Connect");
+      //Serial.println("Unable to Connect");
     }
   }
 }
@@ -604,12 +605,23 @@ void Evebrain::leftMotorForward(int distance){
 
 void Evebrain::servo(int angle, int pin){
   // Set up the servo
-  if(pin == 0){ servoid.attach(SERVO_PIN);}
-  if(pin == 1){ servoid.attach(SERVO_PIN_TWO);}
-  servoid.write(angle);
-  timeTillComplete = millis() + 1000;
-  wait();
-  servoMove = 1;
+  if(pin == 0){ 
+    pinMode(SERVO_PIN, OUTPUT);
+    servo_pulses_left = abs(servoPosition - angle);
+    Serial.println(servo_pulses_left);
+    next_servo_pulse = 0;
+    servoPosition = angle;
+    wait();
+  }
+  if(pin == 1){ 
+    servoOne.attach(SERVO_PIN_TWO,500,2200);
+    servoOne.write(angle);
+    servoMove = 1;
+    timeTillComplete = millis() + 1000;
+    wait();
+  }
+  
+  
 }
 
 void Evebrain::rightMotorForward(int distance){
@@ -633,25 +645,6 @@ void Evebrain::rightMotorBackward(int distance){
   wait();
 }
 
-boolean Evebrain::ready(){
-  return (rightMotor.ready() && leftMotor.ready() && timeTillComplete < millis());
-}
-
-void Evebrain::wait(){
-  if(blocking){
-    while(!ready()){
-    }
-  }
-}
-
-void Evebrain::ledHandler(){
-  long t = millis();
-  uint8_t val = (abs((millis() % (uint32_t)LED_PULSE_TIME) - LED_PULSE_TIME/2) / (LED_PULSE_TIME/2)) * 50;
-  led.setRGBA(LED_COLOUR_NORMAL, val);
-}
-
-void Evebrain::autoHandler(){
-}
 
 void Evebrain::readSensors(byte pin){
   uint8_t temp[4];
@@ -718,19 +711,55 @@ void Evebrain::calibrateSlack(unsigned int amount){
   leftMotor.turn(1, BACKWARD);
 }
 
+
 void Evebrain::calibrateMove(float amount){
   settings.moveCalibration = amount;
   saveSettings();
 }
+
 
 void Evebrain::calibrateTurn(float amount){
   settings.turnCalibration = amount;
   saveSettings();
 }
 
+
 void Evebrain::calibrateHandler(){
   if(calibratingSlack && rightMotor.ready() && leftMotor.ready()){
     takeUpSlack((rightMotor.lastDirection == FORWARD ? BACKWARD : FORWARD), (leftMotor.lastDirection == FORWARD ? BACKWARD : FORWARD));
+  }
+}
+
+
+boolean Evebrain::ready(){
+  return (rightMotor.ready() && leftMotor.ready() && !servo_pulses_left && timeTillComplete < millis());
+}
+
+void Evebrain::wait(){
+  if(blocking){
+    while(!ready()){
+      if(servo_pulses_left){
+        servoHandler();
+      }
+    }
+  }
+}
+
+void Evebrain::ledHandler(){
+  long t = millis();
+  uint8_t val = (abs((millis() % (uint32_t)LED_PULSE_TIME) - LED_PULSE_TIME/2) / (LED_PULSE_TIME/2)) * 50;
+  led.setRGBA(LED_COLOUR_NORMAL, val);
+}
+
+void Evebrain::servoHandler(){
+  if(servo_pulses_left){
+    if(micros() >= next_servo_pulse){
+      servo_pulses_left--;
+      digitalWrite(SERVO_PIN, HIGH);
+      delayMicroseconds((((servoPosition%181)/90)+0.5)*1000);
+      digitalWrite(SERVO_PIN, LOW);
+      next_servo_pulse = micros() + (12000 - (((servoPosition%181)/90)+0.5)*1000);
+    }
   }
 }
 
@@ -803,8 +832,8 @@ void Evebrain::checkReady(){
       cmdProcessor.sendComplete();
       buzzerBeep = 0;
     } 
-    else if (servoMove){
-      servoid.detach();
+    else if (servoMove > 0){
+      if(servoMove == 1) {servoOne.detach();}
       cmdProcessor.sendComplete();
       servoMove = 0;
     }
@@ -823,7 +852,7 @@ void Evebrain::checkReady(){
 
 void Evebrain::loop(){
   ledHandler();
-  autoHandler();
+  servoHandler();
   calibrateHandler();
   networkNotifier();
   wifiScanNotifier();
