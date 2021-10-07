@@ -112,7 +112,7 @@ Change Flash size to 4M
 #List of Supported eBrain Commands
 
 Command Name         does this command take time to run?
-
+```
 "version",           true
 "ping",              true
 "uptime",            true
@@ -151,3 +151,4 @@ Command Name         does this command take time to run?
 "freeHeap",          true
 "startWifiScan",     true
 "postToServer",      true
+```
