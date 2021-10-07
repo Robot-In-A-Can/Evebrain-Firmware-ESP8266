@@ -40,7 +40,7 @@ Special thanks to the Mirobot project (http://mirobot.io)
    into *Additional Board Manager URLs* field. You can add multiple
    URLs, separating them with commas.
 1. Open Boards Manager from Tools > Board menu and find `esp8266`  platform.
-1. Select the `2.3.0` version from a drop-down box.
+1. Select the `3.0.2` version from a drop-down box.
 1. Click the *install* button.
 1. Select `Generic ESP8266 Module` from the `Tools > Board > ESP8266 Modules` menu after installation.
 2.  Select `4M (3M SPIFFS)` from the `Tools > Flash Size:` menu.
