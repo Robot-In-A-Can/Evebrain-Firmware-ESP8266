@@ -10,6 +10,7 @@ SerialWebSocket v1ws(Serial);
 ShiftStepper rightMotor(1);
 ShiftStepper leftMotor(0);
 
+HTTPClient http;
 EvebrainWifi wifi;
 OTA ota;
 
@@ -320,8 +321,9 @@ void Evebrain::_postToServer(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonO
   if(inJson["arg"].asObject().containsKey("time")){
     settings.serverRequestTime = atoi(inJson["arg"]["time"].asString());
   }
-
+  //Save all the server host settings
   saveSettings();
+  //Begin or End Posting Loop
   postToServer();
 }
 
@@ -548,33 +550,8 @@ void Evebrain::distanceSensor(){
   wait();
 }
 
-void Evebrain::postToServer(){
-  // Fingerprint
-  const uint8_t fingerprint[20] = {0x56, 0x03, 0xf0, 0x21, 0x8b, 0x25, 0xad, 0x7b, 0xbd, 0xdf, 0x5d, 0x03, 0x65, 0x52, 0x84, 0x0a, 0x5f, 0xff, 0x46, 0x74};
 
-  if (settings.doPost == 1){
-    char post[200] = "";
-    std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
-    client->setFingerprint(fingerprint);
-    HTTPClient http;
-    if (http.begin(*client, settings.hostServer)) {
-      int analog = analogRead(0);
-      int pins[9] = {4,5,10,16,14,12,13,0,2};
-      char pinState[9];
-      for (int i=0;i<9;i++){
-        pinState[i] = '0' + digitalRead(pins[i]);
-      }
-      http.addHeader("Content-Type", "application/json");
-      sprintf(post,"{\"analog\":\" %d \",\"digital_pins\":\" %s \",\"distance\":\" %d \",\"temperature\":\" %.2f \",\"humidity\":\" %.2f \",\"author\":\" %s \"}",analog,pinState,distanceVar,temperatureVar,humidityVar,settings.ap_ssid);
-      int httpCode = http.POST(post);
-      http.end();
-      //Serial.println(httpCode);
-    } else {
-      //unable to connect
-      //Serial.println("Unable to Connect");
-    }
-  }
-}
+
 
 short Evebrain::digitalInput(byte pin){
   digitalWrite(pin, LOW);
@@ -602,6 +579,70 @@ void Evebrain::leftMotorForward(int distance){
   leftMotor.turn(distance * steps_per_degree * settings.turnCalibration, FORWARD);
   wait();
 }
+
+
+void Evebrain::receiveFromServer() {
+  //request last command only
+  std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
+  client->setFingerprint(fingerprint);
+
+  char getlink[100];
+  strcpy(getlink,settings.hostServer);
+  strcat(getlink,"/?_sort=id&_order=desc&_limit=1");
+
+  if (http.begin(*client,getlink)) {
+    int httpCode = http.GET();
+    // httpCode will be negative on error
+    if (httpCode > 0) {
+      // file found at server
+      if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+        String payload = http.getString();
+        char *msg = new char[payload.length()];
+        strcpy(msg, payload.substring( 1, payload.length() - 2 ).c_str());
+        cmdProcessor.processMsg(msg);
+        //Serial.printf("[HTTPS] GET... %s\n", msg);
+      }
+    } else {
+      //Serial.printf("[HTTPS] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+    }
+    http.end();
+  } else {
+
+  }
+}
+
+void Evebrain::postMsgToServer(char * msg){
+  std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
+  client->setFingerprint(fingerprint);
+  if (http.begin(*client, settings.hostServer)) {
+    http.addHeader("Content-Type", "application/json");
+    int httpCode = http.POST(msg);
+    http.end();
+  } else {
+  }
+}
+
+
+
+void Evebrain::postToServer(){
+  //if we want to connect to a JSON server
+  if (settings.doPost == 1){
+    char post[200] = "";
+    //read full status of eBrain
+    int analog = analogRead(0);
+    int pins[9] = {4,5,10,16,14,12,13,0,2};
+    char pinState[9];
+    for (int i=0;i<9;i++){
+      pinState[i] = '0' + digitalRead(pins[i]);
+    }
+    sprintf(post,"{\"analog\":\" %d \",\"digital_pins\":\" %s \",\"distance\":\" %d \",\"temperature\":\" %.2f \",\"humidity\":\" %.2f \",\"author\":\" %s \"}",analog,pinState,distanceVar,temperatureVar,humidityVar,settings.ap_ssid);
+    //recieve and do anything that is on ther server for this robot to do
+    receiveFromServer();
+    //post full status update
+    postMsgToServer(post);
+  }
+}
+
 
 void Evebrain::servo(int angle, int pin){
   // Set up the servo

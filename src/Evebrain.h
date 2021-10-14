@@ -108,6 +108,8 @@ class Evebrain {
     void humidity();
     void distanceSensor();
     void postToServer();
+    void postMsgToServer(char *);
+    void receiveFromServer();
     void readSensors(byte);
     boolean ready();
     void loop();
@@ -201,5 +203,6 @@ class Evebrain {
     char serial_buffer[SERIAL_BUFFER_LENGTH];
     int serial_buffer_pos;
     boolean wifiEnabled;
+    const uint8_t fingerprint[20] = {0x56, 0x03, 0xf0, 0x21, 0x8b, 0x25, 0xad, 0x7b, 0xbd, 0xdf, 0x5d, 0x03, 0x65, 0x52, 0x84, 0x0a, 0x5f, 0xff, 0x46, 0x74};
 };
 #endif

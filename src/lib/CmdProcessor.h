@@ -9,8 +9,8 @@ class CmdProcessor;
 #include "Evebrain.h"
 #include "./lib/ArduinoJson/ArduinoJson.h"
 
-#define CMD_COUNT 42
-#define JSON_BUFFER_LENGTH 1024
+#define CMD_COUNT 44
+#define JSON_BUFFER_LENGTH 2048
 #define OUTPUT_HANDLER_COUNT 2
 
 typedef void (Evebrain::*EvebrainMemFn)(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
