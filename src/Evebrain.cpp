@@ -588,7 +588,7 @@ void Evebrain::receiveFromServer() {
 
   char getlink[100];
   strcpy(getlink,settings.hostServer);
-  strcat(getlink,"/?_sort=id&_order=desc&_limit=1");
+  strcat(getlink,"/?_sort=id&_order=desc&_limit=1");  //Check for botname &bot=setting.ap_ssid
 
   if (http.begin(*client,getlink)) {
     int httpCode = http.GET();
