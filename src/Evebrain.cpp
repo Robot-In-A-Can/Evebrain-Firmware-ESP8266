@@ -13,7 +13,6 @@ ShiftStepper leftMotor(0);
 HTTPClient http;
 //fingerprint disabled
 WiFiClientSecure client;
-client.setInsecure();
 
 EvebrainWifi wifi;
 OTA ota;
@@ -585,6 +584,7 @@ void Evebrain::leftMotorForward(int distance){
 
 
 void Evebrain::receiveFromServer() {
+  client.setInsecure();
   char getlink[100];
   strcpy(getlink,settings.hostServer);
   strcat(getlink,"/?_sort=id&_order=desc&_limit=1&bot=");  //Check for last message to botname &bot=
@@ -612,6 +612,7 @@ void Evebrain::receiveFromServer() {
 }
 
 void Evebrain::postMsgToServer(char * msg){
+  client.setInsecure();
   if (http.begin(client, settings.hostServer)) {
     http.addHeader("Content-Type", "application/json");
     int httpCode = http.POST(msg);
