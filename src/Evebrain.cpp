@@ -612,10 +612,6 @@ void Evebrain::receiveFromServer() {
 }
 
 void Evebrain::postMsgToServer(char * msg){
-  //fingerprint disabled
-  WiFiClientSecure client;
-  client.setInsecure();
-
   if (http.begin(client, settings.hostServer)) {
     http.addHeader("Content-Type", "application/json");
     int httpCode = http.POST(msg);
