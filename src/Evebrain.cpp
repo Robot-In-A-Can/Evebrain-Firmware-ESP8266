@@ -321,6 +321,16 @@ void Evebrain::_postToServer(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonO
   if(inJson["arg"].asObject().containsKey("time")){
     settings.serverRequestTime = atoi(inJson["arg"]["time"].asString());
   }
+
+  /*if(inJson["arg"].asObject().containsKey("fingerprint")){
+    char *value[20] = inJson["arg"]["fingerprint"].asString();
+    std::vector<uint8_t> myVector(value.begin(), value.end());
+    uint8_t *fingerprint = &value[0];
+    settings.fingerprint = fingerprint;
+  } else {
+    settings.fingerprint = default_fingerprint[0];
+  }*/
+
   //Save all the server host settings
   saveSettings();
   //Begin or End Posting Loop
@@ -582,15 +592,18 @@ void Evebrain::leftMotorForward(int distance){
 
 
 void Evebrain::receiveFromServer() {
-  //request last command only
-  std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
-  client->setFingerprint(fingerprint);
+  //fingerprint disabled
+  //std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
+  //client->setFingerprint(settings.fingerprint);
+  WiFiClientSecure client;
+  client.setInsecure();
 
   char getlink[100];
   strcpy(getlink,settings.hostServer);
-  strcat(getlink,"/?_sort=id&_order=desc&_limit=1");  //Check for botname &bot=setting.ap_ssid
+  strcat(getlink,"/?_sort=id&_order=desc&_limit=1&bot=");  //Check for last message to botname &bot=
+  strcat(getlink,settings.ap_ssid); //this bot
 
-  if (http.begin(*client,getlink)) {
+  if (http.begin(client,getlink)) {
     int httpCode = http.GET();
     // httpCode will be negative on error
     if (httpCode > 0) {
@@ -612,9 +625,12 @@ void Evebrain::receiveFromServer() {
 }
 
 void Evebrain::postMsgToServer(char * msg){
-  std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
-  client->setFingerprint(fingerprint);
-  if (http.begin(*client, settings.hostServer)) {
+  //fingerprint disabled
+  //std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
+  //client->setFingerprint(settings.fingerprint);
+  WiFiClientSecure client;
+  client.setInsecure();
+  if (http.begin(client, settings.hostServer)) {
     http.addHeader("Content-Type", "application/json");
     int httpCode = http.POST(msg);
     http.end();
