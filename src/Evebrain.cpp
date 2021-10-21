@@ -11,6 +11,10 @@ ShiftStepper rightMotor(1);
 ShiftStepper leftMotor(0);
 
 HTTPClient http;
+//fingerprint disabled
+WiFiClientSecure client;
+client.setInsecure();
+
 EvebrainWifi wifi;
 OTA ota;
 
@@ -322,19 +326,8 @@ void Evebrain::_postToServer(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonO
     settings.serverRequestTime = atoi(inJson["arg"]["time"].asString());
   }
 
-  /*if(inJson["arg"].asObject().containsKey("fingerprint")){
-    char *value[20] = inJson["arg"]["fingerprint"].asString();
-    std::vector<uint8_t> myVector(value.begin(), value.end());
-    uint8_t *fingerprint = &value[0];
-    settings.fingerprint = fingerprint;
-  } else {
-    settings.fingerprint = default_fingerprint[0];
-  }*/
-
   //Save all the server host settings
   saveSettings();
-  //Begin or End Posting Loop
-  postToServer();
 }
 
 void Evebrain::_temperature(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
@@ -592,12 +585,6 @@ void Evebrain::leftMotorForward(int distance){
 
 
 void Evebrain::receiveFromServer() {
-  //fingerprint disabled
-  //std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
-  //client->setFingerprint(settings.fingerprint);
-  WiFiClientSecure client;
-  client.setInsecure();
-
   char getlink[100];
   strcpy(getlink,settings.hostServer);
   strcat(getlink,"/?_sort=id&_order=desc&_limit=1&bot=");  //Check for last message to botname &bot=
@@ -626,10 +613,9 @@ void Evebrain::receiveFromServer() {
 
 void Evebrain::postMsgToServer(char * msg){
   //fingerprint disabled
-  //std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
-  //client->setFingerprint(settings.fingerprint);
   WiFiClientSecure client;
   client.setInsecure();
+
   if (http.begin(client, settings.hostServer)) {
     http.addHeader("Content-Type", "application/json");
     int httpCode = http.POST(msg);
