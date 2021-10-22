@@ -652,7 +652,7 @@ void Evebrain::servo(int angle, int pin){
   if(pin == 0){ 
     pinMode(SERVO_PIN, OUTPUT);
     servo_pulses_left = abs(servoPosition - angle);
-    Serial.println(servo_pulses_left);
+    //Serial.println(servo_pulses_left);
     next_servo_pulse = 0;
     servoPosition = angle;
     wait();
