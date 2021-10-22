@@ -624,22 +624,26 @@ void Evebrain::postMsgToServer(char * msg){
 
 
 void Evebrain::postToServer(){
-  //if we want to connect to a JSON server
-  if (settings.doPost == 1){
-    char post[200] = "";
-    //read full status of eBrain
-    int analog = analogRead(0);
-    int pins[9] = {4,5,10,16,14,12,13,0,2};
-    char pinState[9];
-    for (int i=0;i<9;i++){
-      pinState[i] = '0' + digitalRead(pins[i]);
-    }
-    sprintf(post,"{\"analog\":\" %d \",\"digital_pins\":\" %s \",\"distance\":\" %d \",\"temperature\":\" %.2f \",\"humidity\":\" %.2f \",\"author\":\" %s \"}",analog,pinState,distanceVar,temperatureVar,humidityVar,settings.ap_ssid);
-    //recieve and do anything that is on ther server for this robot to do
-    receiveFromServer();
-    //post full status update
-    postMsgToServer(post);
+  int analog = analogRead(0);
+  int pins[10] = {4,5,10,16,14,12,13,0,2};
+  char pinState[10];
+  for (int i=0;i<9;i++){
+    pinState[i] = '0' + digitalRead(pins[i]);
   }
+  snprintf(post, sizeof post,"{\"type\":\"update\",\"analog\":\"%d\",\"digital_pins\":\"%s\",\"distance\":\"%d\",\"temperature\":\"%.2f\",\"humidity\":\"%.2f\",\"bot\":\"%s\"}",analog,pinState,distanceVar,temperatureVar,humidityVar,settings.ap_ssid);
+  
+  //recieve and do anything that is on ther server for this robot to do
+  receiveFromServer();
+
+  //if(!cmdProcessor.in_process && ready()){
+  //post full status update
+  postMsgToServer(post);
+  //}
+  
+
+  /*char post[200] = "";
+  sprintf(post,"{\"type\":\"cmd\",\"status\":\"in-progress\",\"bot\":\"%s\"}",settings.ap_ssid);
+  postMsgToServer(post);*/
 }
 
 
@@ -660,8 +664,6 @@ void Evebrain::servo(int angle, int pin){
     timeTillComplete = millis() + 1000;
     wait();
   }
-  
-  
 }
 
 void Evebrain::rightMotorForward(int distance){
@@ -902,7 +904,7 @@ void Evebrain::loop(){
   serialHandler();
   checkReady();
   ota.runOTA();
-  if (settings.doPost){
+  if (settings.doPost && ready()){
     postToServer();
     delay(settings.serverRequestTime*1000);
   }
