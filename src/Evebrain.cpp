@@ -630,6 +630,7 @@ void Evebrain::postToServer(){
   for (int i=0;i<9;i++){
     pinState[i] = '0' + digitalRead(pins[i]);
   }
+  pinState[9] = 0; // add null terminator
   snprintf(post, sizeof post,"{\"type\":\"update\",\"analog\":\"%d\",\"digital_pins\":\"%s\",\"distance\":\"%d\",\"temperature\":\"%.2f\",\"humidity\":\"%.2f\",\"bot\":\"%s\"}",analog,pinState,distanceVar,temperatureVar,humidityVar,settings.ap_ssid);
   
   //recieve and do anything that is on ther server for this robot to do
@@ -892,6 +893,8 @@ void Evebrain::checkReady(){
   }
 }
 
+unsigned long previousPostTime = 0;
+
 void Evebrain::loop(){
   ledHandler();
   servoHandler();
@@ -904,8 +907,9 @@ void Evebrain::loop(){
   serialHandler();
   checkReady();
   ota.runOTA();
-  if (settings.doPost && ready()){
+
+  if (settings.doPost && ready() && (millis() - previousPostTime) >= (((unsigned long)settings.serverRequestTime)*1000)) {
     postToServer();
-    delay(settings.serverRequestTime*1000);
+    previousPostTime = millis();
   }
 }
