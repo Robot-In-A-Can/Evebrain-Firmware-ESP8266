@@ -640,7 +640,7 @@ void Evebrain::postToServer(){
   }
   pinState[9] = 0; // add null terminator
   
-  snprintf(post, sizeof post,"{\"type\":\"update\",\"analog\":\"%d\",\"digital_pins\":\"%s\",\"distance\":\"%d\",\"temperature\":\"%.2f\",\"humidity\":\"%.2f\",\"bot\":\"%s\"}",analog,pinState,distanceVar,temperatureVar,humidityVar,settings.ap_ssid);
+  snprintf(post, sizeof post,"{\"type\":\"update\",\"analog\":\"%d\",\"digital_pins\":\"%s\",\"distance\":\"%d\",\"temperature\":\"%.2f\",\"humidity\":\"%.2f\",\"bot\":\"%s\",\"refresh_rate:\":\"%d\"}",analog,pinState,distanceVar,temperatureVar,humidityVar,settings.ap_ssid,settings.serverRequestTime);
   
   //recieve and do anything that is on ther server for this robot to do
   receiveFromServer();
