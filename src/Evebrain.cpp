@@ -533,7 +533,8 @@ void Evebrain::humidity(){
   humidityRead = 1;
 }
 
-void Evebrain::distanceSensor(){
+
+void Evebrain::distanceCheck(){
   pinMode(TRIGPIN, OUTPUT); // Sets the trigPin as an Output
   pinMode(ECHOPIN, INPUT); // Sets the echoPin as an Input
   // Clears the trigPin
@@ -547,6 +548,11 @@ void Evebrain::distanceSensor(){
   duration = pulseIn(ECHOPIN, HIGH, 20000);
   // Calculating the distance
   distanceVar = (duration/2) / 29.1;
+}
+
+
+void Evebrain::distanceSensor(){
+  distanceCheck();
   timeTillComplete = millis() + 250;
   distanceRead = 1;
   wait();
@@ -645,9 +651,12 @@ void Evebrain::postToServer(){
   //}
 
   //TODO read: distance - temperature - humidity
-  temperature();
-  humidity();
-  distanceSensor();
+  //keep in mind when doing the reads it must be done such so as not to conflict with
+  //the regular reads (ie. it will pollute the read if it reads again before the first read is complete)
+  dht.setup(DHTPIN,DHTesp::DHT11);
+  temperatureVar = dht.getTemperature();
+  humidityVar = dht.getHumidity();
+  distanceCheck();
   
 
   /*char post[200] = "";

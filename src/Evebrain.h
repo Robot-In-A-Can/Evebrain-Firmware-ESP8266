@@ -107,6 +107,7 @@ class Evebrain {
     void temperature();
     void humidity();
     void distanceSensor();
+    void distanceCheck();
     void postToServer();
     void postMsgToServer(char *);
     void receiveFromServer();
