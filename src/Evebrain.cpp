@@ -633,10 +633,7 @@ void Evebrain::postToServer(){
     pinState[i] = '0' + digitalRead(pins[i]);
   }
   pinState[9] = 0; // add null terminator
-  //TODO read: distance - temperature - humidity
-  temperature();
-  humidity();
-  distanceSensor();
+  
   snprintf(post, sizeof post,"{\"type\":\"update\",\"analog\":\"%d\",\"digital_pins\":\"%s\",\"distance\":\"%d\",\"temperature\":\"%.2f\",\"humidity\":\"%.2f\",\"bot\":\"%s\"}",analog,pinState,distanceVar,temperatureVar,humidityVar,settings.ap_ssid);
   
   //recieve and do anything that is on ther server for this robot to do
@@ -646,6 +643,11 @@ void Evebrain::postToServer(){
   //post full status update
   postMsgToServer(post);
   //}
+
+  //TODO read: distance - temperature - humidity
+  temperature();
+  humidity();
+  distanceSensor();
   
 
   /*char post[200] = "";
