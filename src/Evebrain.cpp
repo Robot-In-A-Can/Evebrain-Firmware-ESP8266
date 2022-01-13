@@ -328,14 +328,14 @@ void Evebrain::_postToServer(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonO
   }
   //toggle on/off sensors
   if(inJson["arg"].asObject().containsKey("toggleDistance")){
-    if(settings.toggleDistancePosting){
+    if(settings.toggleDistancePosting == 1){
       settings.toggleDistancePosting = 0;
     } else {
       settings.toggleDistancePosting = 1;
     }
   }
   if(inJson["arg"].asObject().containsKey("toggleTempHumidity")){
-    if(settings.toggleTempHumidityPosting){
+    if(settings.toggleTempHumidityPosting == 1){
       settings.toggleTempHumidityPosting = 0;
     } else {
       settings.toggleTempHumidityPosting = 1;
