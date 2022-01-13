@@ -75,6 +75,8 @@ struct EvebrainSettings {
   char         ap_pass[64];
   bool         discovery;
   bool         doPost;
+  bool         toggleTempHumidityPosting;
+  bool         toggleDistancePosting;
   char         hostServer[64];
   byte         serverRequestTime;
 };

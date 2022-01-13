@@ -140,6 +140,8 @@ void Evebrain::initSettings(){
   settings.sta_fixeddns1 = 0;
   settings.sta_fixeddns2 = 0;
   settings.doPost = 0;
+  settings.toggleTempHumidityPosting = 0;
+  settings.toggleDistancePosting = 0;
   settings.hostServer[0] = 0;
   settings.serverRequestTime = 0;
   EvebrainWifi::defautAPName(settings.ap_ssid);
@@ -324,7 +326,21 @@ void Evebrain::_postToServer(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonO
   if(inJson["arg"].asObject().containsKey("time")){
     settings.serverRequestTime = atoi(inJson["arg"]["time"].asString());
   }
-
+  //toggle on/off sensors
+  if(inJson["arg"].asObject().containsKey("toggleDistance")){
+    if(settings.toggleDistancePosting){
+      settings.toggleDistancePosting = 0;
+    } else {
+      settings.toggleDistancePosting = 1;
+    }
+  }
+  if(inJson["arg"].asObject().containsKey("toggleTempHumidity")){
+    if(settings.toggleTempHumidityPosting){
+      settings.toggleTempHumidityPosting = 0;
+    } else {
+      settings.toggleTempHumidityPosting = 1;
+    }
+  }
   //Save all the server host settings
   saveSettings();
 }
@@ -644,24 +660,17 @@ void Evebrain::postToServer(){
   
   //recieve and do anything that is on ther server for this robot to do
   receiveFromServer();
-
-  //if(!cmdProcessor.in_process && ready()){
-  //post full status update
   postMsgToServer(post);
-  //}
 
-  //TODO read: distance - temperature - humidity
-  //keep in mind when doing the reads it must be done such so as not to conflict with
-  //the regular reads (ie. it will pollute the read if it reads again before the first read is complete)
-  dht.setup(DHTPIN,DHTesp::DHT11);
-  temperatureVar = dht.getTemperature();
-  humidityVar = dht.getHumidity();
-  distanceCheck();
-  
-
-  /*char post[200] = "";
-  sprintf(post,"{\"type\":\"cmd\",\"status\":\"in-progress\",\"bot\":\"%s\"}",settings.ap_ssid);
-  postMsgToServer(post);*/
+  //if toggle is on read from sensors
+  if(settings.toggleTempHumidityPosting){
+    dht.setup(DHTPIN,DHTesp::DHT11);
+    temperatureVar = dht.getTemperature();
+    humidityVar = dht.getHumidity();
+  }
+  if(settings.toggleDistancePosting){
+    distanceCheck();
+  }
 }
 
 
