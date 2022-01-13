@@ -327,14 +327,15 @@ void Evebrain::_postToServer(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonO
     settings.serverRequestTime = atoi(inJson["arg"]["time"].asString());
   }
   //toggle on/off sensors
-  if(inJson["arg"].asObject().containsKey("toggleDistance")){
+  //TODO bool is not flipping
+  if(strcmp(inJson["arg"].asString(),"toggleDistance")){
     if(settings.toggleDistancePosting == 1){
       settings.toggleDistancePosting = 0;
     } else {
       settings.toggleDistancePosting = 1;
     }
   }
-  if(inJson["arg"].asObject().containsKey("toggleTempHumidity")){
+  if(strcmp(inJson["arg"].asString(),"toggleTempHumidity")){
     if(settings.toggleTempHumidityPosting == 1){
       settings.toggleTempHumidityPosting = 0;
     } else {
