@@ -663,12 +663,12 @@ void Evebrain::postToServer(){
   postMsgToServer(post);
 
   //if toggle is on read from sensors
-  if(settings.toggleTempHumidityPosting){
+  if(settings.toggleTempHumidityPosting == 1){
     dht.setup(DHTPIN,DHTesp::DHT11);
     temperatureVar = dht.getTemperature();
     humidityVar = dht.getHumidity();
   }
-  if(settings.toggleDistancePosting){
+  if(settings.toggleDistancePosting == 1){
     distanceCheck();
   }
 }
