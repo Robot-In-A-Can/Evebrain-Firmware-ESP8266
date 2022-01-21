@@ -657,7 +657,28 @@ void Evebrain::postToServer(){
   }
   pinState[9] = 0; // add null terminator
   
-  snprintf(post, sizeof post,"{\"type\":\"update\",\"analog\":\"%d\",\"digital_pins\":\"%s\",\"distance\":\"%d\",\"temperature\":\"%.2f\",\"humidity\":\"%.2f\",\"bot\":\"%s\",\"refresh_rate:\":\"%d\"}",analog,pinState,distanceVar,temperatureVar,humidityVar,settings.ap_ssid,settings.serverRequestTime);
+  StaticJsonBuffer<500> outBuffer;
+  JsonObject& outMsg = outBuffer.createObject();
+  outMsg["type"] = "update";
+  outMsg["analog"] = analog;
+  outMsg["digital_pins"] = pinState;
+  
+  if (settings.toggleDistancePosting == 1) {
+    outMsg["distance"] = distanceVar;
+  } else {
+    outMsg["distance"] = ((char*)0);
+  }
+  if (settings.toggleTempHumidityPosting == 1) {
+    outMsg["temperature"] = temperatureVar;
+    outMsg["humidity"] = humidityVar;
+  } else {
+    outMsg["temperature"] = ((char*)0);
+    outMsg["humidity"] = ((char*)0);
+  }
+  outMsg["bot"] = settings.ap_ssid;
+  outMsg["refresh_rate"] = settings.serverRequestTime;
+
+  outMsg.printTo(post, sizeof(post));
   
   //recieve and do anything that is on ther server for this robot to do
   receiveFromServer();
