@@ -659,7 +659,8 @@ void Evebrain::postToServer(){
   } else {
     outMsg["distance"] = ((char*)0);
   }
-  if (settings.toggleTempHumidityPosting == 1) {
+  // do not set temperature or humidity when they are an invalid value, like nan.
+  if (settings.toggleTempHumidityPosting == 1 && temperatureVar > -41 && humidityVar > -1) {
     outMsg["temperature"] = temperatureVar;
     outMsg["humidity"] = humidityVar;
   } else {
@@ -670,7 +671,6 @@ void Evebrain::postToServer(){
   outMsg["refresh_rate"] = settings.serverRequestTime;
 
   outMsg.printTo(post, sizeof(post));
-  
   //recieve and do anything that is on ther server for this robot to do
   receiveFromServer();
   postMsgToServer(post);
