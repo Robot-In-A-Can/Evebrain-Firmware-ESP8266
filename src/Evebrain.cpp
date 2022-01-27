@@ -612,10 +612,13 @@ void Evebrain::receiveFromServer() {
       if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
         String payload = http.getString();
         char *msg = new char[payload.length()];
-        strcpy(msg, payload.substring( 1, payload.length() - 2 ).c_str());
-        cmdProcessor.processMsg(msg);
-        //Serial.printf("[HTTPS] GET... %s\n", msg);
-        delete[] msg; //free heap
+        //if no message don't execute blank msg
+        if(strlen(msg) > 1) {
+          strcpy(msg, payload.substring( 1, payload.length() - 2 ).c_str());
+          cmdProcessor.processMsg(msg);
+          //Serial.printf("[HTTPS] GET... %s\n", msg);
+          delete[] msg; //free heap
+        }
       }
     } else {
       //Serial.printf("[HTTPS] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
