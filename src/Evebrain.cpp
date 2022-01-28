@@ -651,8 +651,8 @@ void Evebrain::postToServer(){
   }
   pinState[9] = 0; // add null terminator
   
-  StaticJsonBuffer<1000> outBuffer;
-  JsonObject& outMsg = outBuffer.createObject();
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& outMsg = jsonBuffer.createObject();
   outMsg["type"] = "update";
   outMsg["analog"] = analog;
   outMsg["digital_pins"] = pinState;
