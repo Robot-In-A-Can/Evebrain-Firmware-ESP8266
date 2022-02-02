@@ -768,7 +768,7 @@ void Evebrain::version(char v){
 
 void Evebrain::networkNotifier(){
   if(!EvebrainWifi::networkChanged) return;
-  StaticJsonBuffer<500> outBuffer;
+  DynamicJsonBuffer outBuffer;
   JsonObject& outMsg = outBuffer.createObject();
   EvebrainWifi::networkChanged = false;
   _getConfig(outMsg, outMsg);
@@ -777,7 +777,7 @@ void Evebrain::networkNotifier(){
 
 void Evebrain::wifiScanNotifier(){
   if(!EvebrainWifi::wifiScanReady) return;
-  StaticJsonBuffer<2000> outBuffer;
+  DynamicJsonBuffer outBuffer;
   JsonObject& outMsg = outBuffer.createObject();
   JsonArray& msg = outMsg.createNestedArray("msg");
   EvebrainWifi::wifiScanReady = false;
