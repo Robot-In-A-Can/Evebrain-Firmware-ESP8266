@@ -2,7 +2,7 @@
 #define __EvebrainWebSocket_h__
 
 #include "Arduino.h"
-#include "lib/ArduinoWebSockets/WebSocketsServer.h"
+#include "lib/ArduinoWebSockets/ArduinoWebsockets.h"
 #include "lib/ArduinoJson/ArduinoJson.h"
 #include "lib/EvebrainWifi.h"
 
