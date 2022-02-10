@@ -954,4 +954,6 @@ void Evebrain::loop(){
     postToServer();
     previousPostTime = millis();
   }
+
+  websocketPoll();
 }

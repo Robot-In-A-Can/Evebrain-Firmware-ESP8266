@@ -26,11 +26,30 @@ void setWsMsgHandler(dataHandler h){
 }
 
 void sendWsMsg(ArduinoJson::JsonObject &msg){
+  if (!wsClient.available()) {
+    wsClient.close();
+    wsClient = ws.accept();
+    wsClient.onMessage(onMessageCallback);
+  }
 
   char jsonBuff[JSON_BUFFER_LENGTH];
   msg.printTo(jsonBuff, sizeof(jsonBuff));
   wsClient.send(jsonBuff, strlen(jsonBuff));
+}
 
+unsigned int lastPolled = millis();
+
+void websocketPoll() {
+  if (wsClient.available()) {
+    Serial.println("Client is available rn");
+    delay(50);
+    wsClient.poll();
+  } else {
+    Serial.println("Client not available rn");
+    delay(50);
+    wsClient = ws.accept();
+    wsClient.poll();
+  }
 }
 
 #endif
