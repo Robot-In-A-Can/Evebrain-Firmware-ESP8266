@@ -11,6 +11,6 @@ typedef void (* dataHandler) (char *);
 void beginWebSocket();
 void setWsMsgHandler(dataHandler);
 void sendWsMsg(ArduinoJson::JsonObject &);
-void poll();
+void websocketPoll();
 
 #endif
