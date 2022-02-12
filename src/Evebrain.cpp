@@ -3,13 +3,6 @@
 #include "lib/DHT/DHTesp.h"
 
 
-
-const char* newssid = "Phone-Server"; //Enter SSID
-const char* newpassword = "wYgtGeYnv8cUwA"; //Enter Password
-using namespace websockets;
-WebsocketsServer theServer;
-
-
 DHTesp dht;
 CmdProcessor cmdProcessor;
 SerialWebSocket v1ws(Serial);
@@ -62,7 +55,7 @@ Evebrain::Evebrain(){
 }
 
 void Evebrain::begin(unsigned char v){
-  /*version(v);
+  version(v);
 
   // Initialise the steppers
   ShiftStepper::setup(SHIFT_REG_DATA, SHIFT_REG_CLOCK, SHIFT_REG_LATCH);
@@ -75,7 +68,7 @@ void Evebrain::begin(unsigned char v){
   // Pull the settings out of memory
   initSettings();
 
-  ota.setupOTA();*/
+  ota.setupOTA();
 }
 
 void Evebrain::begin(){
@@ -83,8 +76,6 @@ void Evebrain::begin(){
 }
 
 void Evebrain::enableSerial(){
-  Serial.begin(115200);
-  /*
   // Use non-blocking mode to process serial
   blocking = false;
   // Set up the commands
@@ -107,27 +98,13 @@ void Evebrain::enableSerial(){
   }
   // Enable serial processing
   serialEnabled = true;
-  */
 }
 
 void Evebrain::enableWifi(){
-  /*wifi.begin(&settings);
+  wifi.begin(&settings);
   wifi.onMsg(handleWsMsg);
   cmdProcessor.addOutputHandler(wifi.sendWebSocketMsg);
-  wifiEnabled = true;*/
-  WiFi.begin(newssid, newpassword);
-  for(int i = 0; i < 15 && WiFi.status() != WL_CONNECTED; i++) {
-      Serial.print(".");
-      delay(1000);
-  }
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());   //You can get IP address assigned to ESP
-
-  theServer.listen(8899);
-  Serial.print("Is server live? ");
-  Serial.println(theServer.available());
+  wifiEnabled = true;
 }
 
 void Evebrain::initSettings(){
@@ -960,51 +937,10 @@ void Evebrain::checkReady(){
 
 unsigned long previousPostTime = 0;
 
-WebsocketsClient newClient;
-
-void onMessageCallback2(WebsocketsMessage message) {
-  Serial.print("Got message: ");
-  Serial.print(message.data());
-
-  String id = message.data().substring(23, 33);
-  char msgSendBuf[200];
-  snprintf(msgSendBuf, sizeof(msgSendBuf), "{\"cmd\":\"version\", \"msg\":\"3.0.2\", \"id\":\"%s\"}", id);
-  Serial.println("Sending...");
-  Serial.print(msgSendBuf);
-  newClient.send(msgSendBuf);
-}
-
-void onEventsCallback2(WebsocketsEvent event, String data) {
-    if(event == WebsocketsEvent::ConnectionOpened) {
-        Serial.println("Connnection Opened");
-    } else if(event == WebsocketsEvent::ConnectionClosed) {
-        Serial.println("Connnection Closed");
-    } else if(event == WebsocketsEvent::GotPing) {
-        Serial.println("Got a Ping!");
-    } else if(event == WebsocketsEvent::GotPong) {
-        Serial.println("Got a Pong!");
-    }
-}
-
 void Evebrain::loop()
 {
-  if (theServer.poll())
-  {
-    Serial.println("a client is waiting");
-    newClient = theServer.accept();
-    newClient.onMessage(onMessageCallback2);
 
-    // setup events callback
-    newClient.onEvent(onEventsCallback2);
-
-    while (newClient.available())
-    {
-      newClient.poll();
-    }
-    Serial.println("Client disconnected");
-  }
-
-  /*ledHandler();
+  ledHandler();
   servoHandler();
   calibrateHandler();
   networkNotifier();
@@ -1015,11 +951,11 @@ void Evebrain::loop()
   serialHandler();
   checkReady();
   ota.runOTA();
+  // connect to websocket client (if one is trying to connect) and check for incoming message
+  websocketPoll();
 
   if (settings.doPost && ready() && (millis() - previousPostTime) >= (((unsigned long)settings.serverRequestTime)*1000)) {
     postToServer();
     previousPostTime = millis();
   }
-
-  poll();*/
 }

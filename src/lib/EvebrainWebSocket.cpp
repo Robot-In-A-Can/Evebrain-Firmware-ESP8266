@@ -10,34 +10,22 @@ dataHandler handler = NULL;
 
 void onMessageCallback(WebsocketsMessage message) {
   if (handler) handler((char*) message.c_str());
-  Serial.println("Got message");
-  Serial.print(message.data());
-}
-
-void onEventsCallback(WebsocketsEvent event, String data) {
-    if(event == WebsocketsEvent::ConnectionOpened) {
-        Serial.println("Connnection Opened");
-    } else if(event == WebsocketsEvent::ConnectionClosed) {
-        Serial.println("Connnection Closed");
-    } else if(event == WebsocketsEvent::GotPing) {
-        Serial.println("Got a Ping!");
-    } else if(event == WebsocketsEvent::GotPong) {
-        Serial.println("Got a Pong!");
-    }
 }
 
 void beginWebSocket(){
   Serial.println("started");
   ws.listen(8899);
-  wsClient = ws.accept();
-  wsClient.onMessage(onMessageCallback);
-  wsClient.onEvent(onEventsCallback);
 }
 
-void poll() {
+void websocketPoll() {
     if(wsClient.available()) {
         wsClient.poll();
-        Serial.println("polled");
+    } else {
+      // if not connected, but if there is a client waiting, connect.
+      if (ws.poll()) {
+        wsClient = ws.accept();
+        wsClient.onMessage(onMessageCallback);
+      }
     }
 }
 
@@ -46,35 +34,12 @@ void setWsMsgHandler(dataHandler h){
 }
 
 void sendWsMsg(ArduinoJson::JsonObject &msg){
-  if (!wsClient.available()) {
-    wsClient.close();
-    wsClient = ws.accept();
-    wsClient.onMessage(onMessageCallback);
-  }
-
   char jsonBuff[JSON_BUFFER_LENGTH];
   msg.printTo(jsonBuff, sizeof(jsonBuff));
-
-  Serial.println("sending...");
-  Serial.println(jsonBuff);
-  Serial.println("------------");
-
-  wsClient.send(jsonBuff, strlen(jsonBuff));
-}
-
-unsigned int lastPolled = millis();
-
-void websocketPoll() {
   if (wsClient.available()) {
-    Serial.println("Client is available rn");
-    delay(50);
-    wsClient.poll();
-  } else {
-    Serial.println("Client not available rn");
-    delay(50);
-    wsClient = ws.accept();
-    wsClient.poll();
+    wsClient.send(jsonBuff, strlen(jsonBuff));
   }
 }
+
 
 #endif
