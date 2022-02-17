@@ -1,26 +1,32 @@
 #ifdef ESP8266
 
 #include "EvebrainWebSocket.h"
+using namespace websockets;
 
-WebSocketsServer ws = WebSocketsServer(8899);
+WebsocketsServer ws;
+WebsocketsClient wsClient;
 
 dataHandler handler = NULL;
 
-void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
-  switch(type) {
-    case WStype_DISCONNECTED:
-      break;
-    case WStype_CONNECTED:
-      break;
-    case WStype_TEXT:
-      if(handler) handler((char *)payload);
-      break;
-  }
+void onMessageCallback(WebsocketsMessage message) {
+  if (handler) handler((char*) message.c_str());
 }
 
 void beginWebSocket(){
-  ws.begin();
-  ws.onEvent(webSocketEvent);
+  Serial.println("started");
+  ws.listen(8899);
+}
+
+void websocketPoll() {
+    if(wsClient.available()) {
+        wsClient.poll();
+    } else {
+      // if not connected, but if there is a client waiting, connect.
+      if (ws.poll()) {
+        wsClient = ws.accept();
+        wsClient.onMessage(onMessageCallback);
+      }
+    }
 }
 
 void setWsMsgHandler(dataHandler h){
@@ -30,7 +36,10 @@ void setWsMsgHandler(dataHandler h){
 void sendWsMsg(ArduinoJson::JsonObject &msg){
   char jsonBuff[JSON_BUFFER_LENGTH];
   msg.printTo(jsonBuff, sizeof(jsonBuff));
-  ws.broadcastTXT(jsonBuff, strlen(jsonBuff));
+  if (wsClient.available()) {
+    wsClient.send(jsonBuff, strlen(jsonBuff));
+  }
 }
+
 
 #endif

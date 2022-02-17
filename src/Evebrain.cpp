@@ -768,7 +768,7 @@ void Evebrain::version(char v){
 
 void Evebrain::networkNotifier(){
   if(!EvebrainWifi::networkChanged) return;
-  StaticJsonBuffer<500> outBuffer;
+  DynamicJsonBuffer outBuffer;
   JsonObject& outMsg = outBuffer.createObject();
   EvebrainWifi::networkChanged = false;
   _getConfig(outMsg, outMsg);
@@ -777,7 +777,7 @@ void Evebrain::networkNotifier(){
 
 void Evebrain::wifiScanNotifier(){
   if(!EvebrainWifi::wifiScanReady) return;
-  StaticJsonBuffer<2000> outBuffer;
+  DynamicJsonBuffer outBuffer;
   JsonObject& outMsg = outBuffer.createObject();
   JsonArray& msg = outMsg.createNestedArray("msg");
   EvebrainWifi::wifiScanReady = false;
@@ -937,7 +937,9 @@ void Evebrain::checkReady(){
 
 unsigned long previousPostTime = 0;
 
-void Evebrain::loop(){
+void Evebrain::loop()
+{
+
   ledHandler();
   servoHandler();
   calibrateHandler();
@@ -949,6 +951,8 @@ void Evebrain::loop(){
   serialHandler();
   checkReady();
   ota.runOTA();
+  // connect to websocket client (if one is trying to connect) and check for incoming message
+  websocketPoll();
 
   if (settings.doPost && ready() && (millis() - previousPostTime) >= (((unsigned long)settings.serverRequestTime)*1000)) {
     postToServer();
