@@ -182,6 +182,7 @@ void Evebrain::initCmds(){
   cmdProcessor.addCmd("analogInput",      &Evebrain::_analogInput,      true);
   cmdProcessor.addCmd("readSensors",      &Evebrain::_readSensors,      false);
   cmdProcessor.addCmd("digitalInput",     &Evebrain::_digitalInput,     true);
+  cmdProcessor.addCmd("digitalNotify",    &Evebrain::_digitalNotify,    true);
   cmdProcessor.addCmd("gpio_on",          &Evebrain::_gpio_on,          true);
   cmdProcessor.addCmd("gpio_off",         &Evebrain::_gpio_off,         true);
   cmdProcessor.addCmd("gpio_pwm_16",      &Evebrain::_gpio_pwm_16,      true);
@@ -355,6 +356,10 @@ void Evebrain::_gpio_on(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject
 
 void Evebrain::_digitalInput(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
   outJson["msg"] = digitalInput(atoi(inJson["arg"].asString()));
+}
+
+void Evebrain::_digitalNotify(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
+  digitalNotify(atoi(inJson["arg"].asString()));
 }
 
 void Evebrain::_gpio_pwm_16(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
@@ -571,8 +576,24 @@ void Evebrain::distanceSensor(){
 
 short Evebrain::digitalInput(byte pin){
   digitalWrite(pin, LOW);
-  pinMode(pin, INPUT); 
+  pinMode(pin, INPUT);
   return digitalRead(pin);
+}
+
+//volatile byte notifyPin;
+void ICACHE_RAM_ATTR notifyChange();
+
+void notifyChange() {
+  DynamicJsonBuffer outBuffer;
+  JsonObject& outMsg = outBuffer.createObject();
+  outMsg["msg"] = digitalRead(4);
+  cmdProcessor.notify("pin_change", outMsg);
+}
+
+void Evebrain::digitalNotify(byte pin) {
+  //notifyPin = pin;
+  pinMode(4, INPUT);
+  attachInterrupt(digitalPinToInterrupt(4), notifyChange, CHANGE); 
 }
 
 void Evebrain::gpio_on(byte pin){
