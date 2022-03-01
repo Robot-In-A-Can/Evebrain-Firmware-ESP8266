@@ -606,46 +606,36 @@ short Evebrain::digitalInput(byte pin){
     cmdProcessor.notify("pin_change", outMsg);     \
   }                                                \
 
-#define CASE_ATTACH_INTERRUPT_PIN(X)    \
-  case (X): \
-    pinMode( (X), INPUT); \
-    attachInterrupt(digitalPinToInterrupt( (X) ), pin##X##ISR, CHANGE);\
-    return 0; \
+// Define the list of pins we can add an interrupt handler on
+#define INTERRUPTABLE_PINS X(4) X(14) X(12) X(13) X(0) X(2)
 
 // Create the ISRs
-MAKE_ISR_FOR_PIN(4)
-MAKE_ISR_FOR_PIN(14)
-MAKE_ISR_FOR_PIN(12)
-MAKE_ISR_FOR_PIN(13)
-MAKE_ISR_FOR_PIN(0)
-MAKE_ISR_FOR_PIN(2)
+#define X(pinNum) MAKE_ISR_FOR_PIN(pinNum)
+INTERRUPTABLE_PINS
+#undef X
 
 int Evebrain::digitalNotify(byte pin) {
   switch(pin) {
-    CASE_ATTACH_INTERRUPT_PIN(4)
-    CASE_ATTACH_INTERRUPT_PIN(14)
-    CASE_ATTACH_INTERRUPT_PIN(12)
-    CASE_ATTACH_INTERRUPT_PIN(13)
-    CASE_ATTACH_INTERRUPT_PIN(0)
-    CASE_ATTACH_INTERRUPT_PIN(2)
+    #define X(pinNum)                                                         \
+    case (pinNum):                                                            \
+      pinMode( (pinNum), INPUT);                                              \
+      attachInterrupt(digitalPinToInterrupt( (pinNum) ), pin##pinNum##ISR, CHANGE);\
+      return 0;
+    INTERRUPTABLE_PINS
+    #undef X
     default:
       return 1; // signal error
   }
 }
 
-#define CASE_DETACH_INTERRUPT_PIN(X)               \
-  case (X):                                        \
-    detachInterrupt(digitalPinToInterrupt( (X) )); \
-    return 0;                                      \
-
 int Evebrain::digitalStopNotify(byte pin) {
   switch(pin) {
-    CASE_DETACH_INTERRUPT_PIN(4)
-    CASE_DETACH_INTERRUPT_PIN(14)
-    CASE_DETACH_INTERRUPT_PIN(12)
-    CASE_DETACH_INTERRUPT_PIN(13)
-    CASE_DETACH_INTERRUPT_PIN(0)
-    CASE_DETACH_INTERRUPT_PIN(2)
+    #define X(pinNum)                                     \
+    case (pinNum):                                        \
+      detachInterrupt(digitalPinToInterrupt( (pinNum) )); \
+      return 0;
+    INTERRUPTABLE_PINS
+    #undef X
     default:
       return 1; // signal error
   }
