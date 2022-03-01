@@ -976,11 +976,11 @@ void Evebrain::digitalNotifyHandler() {
     // Send the pin change notification
     DynamicJsonBuffer outBuffer;
     JsonObject& outMsg = outBuffer.createObject();
-    JsonObject& outMsgContents = outBuffer.createObject();
-    outMsgContents["pin"] = currentNotification & 0x7F; // clear the MSbit
-    outMsgContents["state"] = currentNotification >> 7; // grab the MSbit only
-    outMsg["msg"] = outMsgContents;
-    cmdProcessor.notify("pin_change", outMsg);
+    unsigned char currentPin = currentNotification & 0x7F; // clear the MSbit, for the pin number
+    outMsg["msg"] = currentNotification >> 7; // grab the MSbit only, for the pin value
+    char notifyID[20];
+    snprintf(notifyID, sizeof(notifyID), "pin_%d_status", currentPin);
+    cmdProcessor.notify(notifyID, outMsg);
   }
 }
 
