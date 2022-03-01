@@ -365,11 +365,18 @@ void Evebrain::_digitalInput(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonO
 }
 
 void Evebrain::_digitalNotify(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
-  int code = digitalNotify(atoi(inJson["arg"].asString()));
+  unsigned char pin = atoi(inJson["arg"].asString());
+  int code = digitalNotify(pin);
   // signal error condition to cmd processor
   if (code) {
     outJson["status"] = "error";
     outJson["msg"] = "Cannot be notified about changes to that pin";
+  } else {
+    // If succesfully added ISR to pin, report current pin's status.
+    noInterrupts();
+    unsigned char interruptNotification = digitalRead(pin) << 7 | pin;
+    interruptNotifications[numInterruptNotifications++] = interruptNotification;
+    interrupts();
   }
 }
 
