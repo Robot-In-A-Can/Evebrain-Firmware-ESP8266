@@ -98,8 +98,8 @@ class Evebrain {
     void beep(int,int);
     short analogInput();
     short digitalInput(byte);
-    void digitalNotify(byte); // These two functions deal with the 
-    void digitalStopNotify(byte); // interrupt notifications
+    int digitalNotify(byte); // These two functions deal with the 
+    int digitalStopNotify(byte); // interrupt notifications
     void gpio_on(byte);
     void gpio_off(byte);
     void gpio_pwm(byte, byte);

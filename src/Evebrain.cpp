@@ -360,11 +360,20 @@ void Evebrain::_digitalInput(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonO
 }
 
 void Evebrain::_digitalNotify(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
-  digitalNotify(atoi(inJson["arg"].asString()));
+  int code = digitalNotify(atoi(inJson["arg"].asString()));
+  // signal error condition to cmd processor
+  if (code) {
+    outJson["status"] = "error";
+    outJson["msg"] = "Cannot be notified about changes to that pin";
+  }
 }
 
 void Evebrain::_digitalStopNotify(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
-  digitalStopNotify(atoi(inJson["arg"].asString()));
+  int code = digitalStopNotify(atoi(inJson["arg"].asString()));
+  if (code) {
+    outJson["status"] = "error";
+    outJson["msg"] = "Cannot stop being notified about changes to that pin since cannot be notified about changes to that pin)";
+  }
 }
 
 void Evebrain::_gpio_pwm_16(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
@@ -601,7 +610,7 @@ short Evebrain::digitalInput(byte pin){
   case (X): \
     pinMode( (X), INPUT); \
     attachInterrupt(digitalPinToInterrupt( (X) ), pin##X##ISR, CHANGE);\
-  break; \
+    return 0; \
 
 // Create the ISRs
 MAKE_ISR_FOR_PIN(4)
@@ -611,7 +620,7 @@ MAKE_ISR_FOR_PIN(13)
 MAKE_ISR_FOR_PIN(0)
 MAKE_ISR_FOR_PIN(2)
 
-void Evebrain::digitalNotify(byte pin) {
+int Evebrain::digitalNotify(byte pin) {
   switch(pin) {
     CASE_ATTACH_INTERRUPT_PIN(4)
     CASE_ATTACH_INTERRUPT_PIN(14)
@@ -620,17 +629,16 @@ void Evebrain::digitalNotify(byte pin) {
     CASE_ATTACH_INTERRUPT_PIN(0)
     CASE_ATTACH_INTERRUPT_PIN(2)
     default:
-      // TODO error handling
-      Serial.println("Cannot set that pin as an interrupt");
+      return 1; // signal error
   }
 }
 
 #define CASE_DETACH_INTERRUPT_PIN(X)               \
   case (X):                                        \
     detachInterrupt(digitalPinToInterrupt( (X) )); \
-  break;                                           \
+    return 0;                                      \
 
-void Evebrain::digitalStopNotify(byte pin) {
+int Evebrain::digitalStopNotify(byte pin) {
   switch(pin) {
     CASE_DETACH_INTERRUPT_PIN(4)
     CASE_DETACH_INTERRUPT_PIN(14)
@@ -639,7 +647,7 @@ void Evebrain::digitalStopNotify(byte pin) {
     CASE_DETACH_INTERRUPT_PIN(0)
     CASE_DETACH_INTERRUPT_PIN(2)
     default:
-      Serial.println("Cannot stop notifications from that pin");
+      return 1; // signal error
   }
 }
 
