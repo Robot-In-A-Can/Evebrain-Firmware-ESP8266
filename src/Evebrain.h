@@ -139,6 +139,7 @@ class Evebrain {
     void version(char);
     void initCmds();
     void serialHandler();
+    void digitalNotifyHandler();
     void _version(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _ping(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _uptime(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
