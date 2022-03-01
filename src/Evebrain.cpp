@@ -183,6 +183,7 @@ void Evebrain::initCmds(){
   cmdProcessor.addCmd("readSensors",      &Evebrain::_readSensors,      false);
   cmdProcessor.addCmd("digitalInput",     &Evebrain::_digitalInput,     true);
   cmdProcessor.addCmd("digitalNotify",    &Evebrain::_digitalNotify,    true);
+  cmdProcessor.addCmd("digitalStopNotify",&Evebrain::_digitalStopNotify,true);
   cmdProcessor.addCmd("gpio_on",          &Evebrain::_gpio_on,          true);
   cmdProcessor.addCmd("gpio_off",         &Evebrain::_gpio_off,         true);
   cmdProcessor.addCmd("gpio_pwm_16",      &Evebrain::_gpio_pwm_16,      true);
@@ -360,6 +361,10 @@ void Evebrain::_digitalInput(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonO
 
 void Evebrain::_digitalNotify(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
   digitalNotify(atoi(inJson["arg"].asString()));
+}
+
+void Evebrain::_digitalStopNotify(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
+  digitalStopNotify(atoi(inJson["arg"].asString()));
 }
 
 void Evebrain::_gpio_pwm_16(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
@@ -580,20 +585,62 @@ short Evebrain::digitalInput(byte pin){
   return digitalRead(pin);
 }
 
-//volatile byte notifyPin;
-void ICACHE_RAM_ATTR notifyChange();
 
-void notifyChange() {
-  DynamicJsonBuffer outBuffer;
-  JsonObject& outMsg = outBuffer.createObject();
-  outMsg["msg"] = digitalRead(4);
-  cmdProcessor.notify("pin_change", outMsg);
-}
+#define MAKE_ISR_FOR_PIN(X)                        \
+  ICACHE_RAM_ATTR void pin##X##ISR() {             \
+    DynamicJsonBuffer outBuffer;                   \
+    JsonObject& outMsg = outBuffer.createObject(); \
+    JsonObject& outMsgContents = outBuffer.createObject(); \
+    outMsgContents["pin"] = (X);                   \
+    outMsgContents["state"] = digitalRead( (X) );  \ 
+    outMsg["msg"] = outMsgContents;                \
+    cmdProcessor.notify("pin_change", outMsg);     \
+  }                                                \
+
+#define CASE_ATTACH_INTERRUPT_PIN(X)    \
+  case (X): \
+    pinMode( (X), INPUT); \
+    attachInterrupt(digitalPinToInterrupt( (X) ), pin##X##ISR, CHANGE);\
+  break; \
+
+// Create the ISRs
+MAKE_ISR_FOR_PIN(4)
+MAKE_ISR_FOR_PIN(14)
+MAKE_ISR_FOR_PIN(12)
+MAKE_ISR_FOR_PIN(13)
+MAKE_ISR_FOR_PIN(0)
+MAKE_ISR_FOR_PIN(2)
 
 void Evebrain::digitalNotify(byte pin) {
-  //notifyPin = pin;
-  pinMode(4, INPUT);
-  attachInterrupt(digitalPinToInterrupt(4), notifyChange, CHANGE); 
+  switch(pin) {
+    CASE_ATTACH_INTERRUPT_PIN(4)
+    CASE_ATTACH_INTERRUPT_PIN(14)
+    CASE_ATTACH_INTERRUPT_PIN(12)
+    CASE_ATTACH_INTERRUPT_PIN(13)
+    CASE_ATTACH_INTERRUPT_PIN(0)
+    CASE_ATTACH_INTERRUPT_PIN(2)
+    default:
+      // TODO error handling
+      Serial.println("Cannot set that pin as an interrupt");
+  }
+}
+
+#define CASE_DETACH_INTERRUPT_PIN(X)               \
+  case (X):                                        \
+    detachInterrupt(digitalPinToInterrupt( (X) )); \
+  break;                                           \
+
+void Evebrain::digitalStopNotify(byte pin) {
+  switch(pin) {
+    CASE_DETACH_INTERRUPT_PIN(4)
+    CASE_DETACH_INTERRUPT_PIN(14)
+    CASE_DETACH_INTERRUPT_PIN(12)
+    CASE_DETACH_INTERRUPT_PIN(13)
+    CASE_DETACH_INTERRUPT_PIN(0)
+    CASE_DETACH_INTERRUPT_PIN(2)
+    default:
+      Serial.println("Cannot stop notifications from that pin");
+  }
 }
 
 void Evebrain::gpio_on(byte pin){
