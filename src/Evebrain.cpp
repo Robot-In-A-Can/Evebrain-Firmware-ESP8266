@@ -953,18 +953,20 @@ void Evebrain::serialHandler(){
 
 void Evebrain::digitalNotifyHandler() {
   while (pinStates.numberOfElements()) {
-    // grab the interrupt notification and decrement the counter,
-    // while ensuring that this is not interrupted.
+    // grab the interrupt notification, ensuring that this is not interrupted.
     noInterrupts();
     PinState state = pinStates.pop();
     interrupts();
-    // Send the pin change notification
-    DynamicJsonBuffer outBuffer;
-    JsonObject& outMsg = outBuffer.createObject();
-    outMsg["msg"] = state.pinState;
-    char notifyID[20];
-    snprintf(notifyID, sizeof(notifyID), "pin_%d_status", state.pin);
-    cmdProcessor.notify(notifyID, outMsg);
+    if (state != PinState::invalid) {
+      //digitalWrite(14, state.pinState);
+      // Send the pin change notification
+      DynamicJsonBuffer outBuffer;
+      JsonObject &outMsg = outBuffer.createObject();
+      outMsg["msg"] = state.pinState;
+      char notifyID[20];
+      snprintf(notifyID, sizeof(notifyID), "pin_%d_status", state.pin);
+      cmdProcessor.notify(notifyID, outMsg);
+    }
   }
 }
 

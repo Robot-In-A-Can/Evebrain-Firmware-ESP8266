@@ -10,7 +10,10 @@ class PinState {
     public:
     PinState(unsigned char pin, unsigned char pinState): pin(pin), pinState(pinState) {}
     PinState(): pin(0), pinState(0) {}
+    bool operator==(const PinState& other);
+    bool operator!=(const PinState& other);
     unsigned char pin, pinState;
+    static PinState invalid;
 };
 
 #define STACK_SIZE 10
@@ -28,17 +31,12 @@ private:
     volatile unsigned char numElements = 0;
 };
 
-#define MAKE_ISR_FOR_PIN(X, NOTIFYSTACK)                                           \
-  ICACHE_RAM_ATTR void pin##X##ISR()                                               \
-  {                                                                                \
-    if ((NOTIFYSTACK).full())                                                      \
-    {                                                                              \
-      return; /* don't add notification if buffer full*/                           \
-    }                                                                              \
-    else                                                                           \
-    {                                                                              \
-      (NOTIFYSTACK).push( PinState((X), digitalRead((X)) == HIGH ? 1 : 0));        \
-    }                                                                              \
+#define MAKE_ISR_FOR_PIN(X, NOTIFYSTACK)                         \
+  ICACHE_RAM_ATTR void pin##X##ISR()                             \
+  {                                                              \
+    int pinValue = digitalRead((X));                             \
+    /*digitalWrite(12, pinValue);*/                                  \
+    (NOTIFYSTACK).push(PinState((X), pinValue == HIGH ? 1 : 0)); \
   }
 
 #endif
