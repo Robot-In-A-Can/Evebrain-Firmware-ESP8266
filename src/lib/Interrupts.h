@@ -18,24 +18,27 @@ class PinState {
 
 #define STACK_SIZE 10
 
-class PinStateStack {
+/**
+ * Implements a queue for pin states. Is O(1) to insert, O(n)
+ * to remove, where n is the number of elements in the queue.
+ */
+class PinStateQueue {
 public:
-    PinStateStack();
+    PinStateQueue();
     bool push(PinState state) volatile;
     PinState pop() volatile;
     int numberOfElements() volatile;
     bool full() volatile;
 private:
     // NOTE: each element of the stack has the pin number, and the MSbit is the state of the pin 
-    volatile unsigned stack[STACK_SIZE];
-    volatile unsigned char numElements = 0;
+    volatile unsigned char stack[STACK_SIZE];
+    volatile int numElements = 0;
 };
 
 #define MAKE_ISR_FOR_PIN(X, NOTIFYSTACK)                         \
   ICACHE_RAM_ATTR void pin##X##ISR()                             \
   {                                                              \
     int pinValue = digitalRead((X));                             \
-    /*digitalWrite(12, pinValue);*/                                  \
     (NOTIFYSTACK).push(PinState((X), pinValue == HIGH ? 1 : 0)); \
   }
 
