@@ -66,7 +66,13 @@ boolean CmdProcessor::processMsg(char * msg){
     if(cmd_num >= 0){
       if(_cmds[cmd_num].immediate){
         (_m->*(_cmds[cmd_num].func))(inMsg, outMsg);
-        sendResponse("complete", outMsg, *id);
+        // kludge to allow an error condition to notify Snap
+        if (outMsg.containsKey("status") &&
+            strcmp(outMsg["status"], "error") == 0) {
+          sendResponse("error", outMsg, *id);
+        } else {
+          sendResponse("complete", outMsg, *id);
+        }
       }else{
         if(in_process){
           // the previous command hasn't finished, send an error

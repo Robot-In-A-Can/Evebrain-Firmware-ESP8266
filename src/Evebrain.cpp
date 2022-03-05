@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include "Evebrain.h"
 #include "lib/DHT/DHTesp.h"
-
+#include "lib/Interrupts.h"
 
 DHTesp dht;
 CmdProcessor cmdProcessor;
@@ -22,6 +22,8 @@ Servo servoOne;
 WS2812B led(STATUS_LED_PIN);
 
 int frequencyHZ[] =  {NOTE_B0,NOTE_C1,NOTE_CS1,NOTE_D1,NOTE_DS1,NOTE_E1,NOTE_F1,NOTE_FS1,NOTE_G1,NOTE_GS1,NOTE_A1,NOTE_AS1,NOTE_B1,NOTE_C2,NOTE_CS2,NOTE_D2, NOTE_DS2,NOTE_E2,NOTE_F2,NOTE_FS2,NOTE_G2,NOTE_GS2,NOTE_A2,NOTE_AS2,NOTE_B2,NOTE_C3,NOTE_CS3,NOTE_D3,NOTE_DS3,NOTE_E3,NOTE_F3,NOTE_FS3,NOTE_G3,NOTE_GS3,NOTE_A3,NOTE_AS3,NOTE_B3,NOTE_C4,NOTE_CS4,NOTE_D4,NOTE_DS4,NOTE_E4,NOTE_F4,NOTE_FS4,NOTE_G4,NOTE_GS4,NOTE_A4,NOTE_AS4,NOTE_B4,NOTE_C5,NOTE_CS5,NOTE_D5,NOTE_DS5,NOTE_E5,NOTE_F5,NOTE_FS5,NOTE_G5,NOTE_GS5,NOTE_A5,NOTE_AS5,NOTE_B5,NOTE_C6,NOTE_CS6,NOTE_D6, NOTE_DS6,NOTE_E6,NOTE_F6,NOTE_FS6,NOTE_G6,NOTE_GS6,NOTE_A6,NOTE_AS6,NOTE_B6,NOTE_C7,NOTE_CS7,NOTE_D7,NOTE_DS7,NOTE_E7,NOTE_F7,NOTE_FS7,NOTE_G7,NOTE_GS7,NOTE_A7,NOTE_AS7,NOTE_B7,NOTE_C8,NOTE_CS8,NOTE_D8,NOTE_DS8};
+
+volatile PinStateQueue pinStates;
 
 void handleWsMsg(char * msg){
   cmdProcessor.processMsg(msg);
@@ -182,6 +184,8 @@ void Evebrain::initCmds(){
   cmdProcessor.addCmd("analogInput",      &Evebrain::_analogInput,      true);
   cmdProcessor.addCmd("readSensors",      &Evebrain::_readSensors,      false);
   cmdProcessor.addCmd("digitalInput",     &Evebrain::_digitalInput,     true);
+  cmdProcessor.addCmd("digitalNotify",    &Evebrain::_digitalNotify,    true);
+  cmdProcessor.addCmd("digitalStopNotify",&Evebrain::_digitalStopNotify,true);
   cmdProcessor.addCmd("gpio_on",          &Evebrain::_gpio_on,          true);
   cmdProcessor.addCmd("gpio_off",         &Evebrain::_gpio_off,         true);
   cmdProcessor.addCmd("gpio_pwm_16",      &Evebrain::_gpio_pwm_16,      true);
@@ -355,6 +359,29 @@ void Evebrain::_gpio_on(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject
 
 void Evebrain::_digitalInput(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
   outJson["msg"] = digitalInput(atoi(inJson["arg"].asString()));
+}
+
+void Evebrain::_digitalNotify(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
+  unsigned char pin = atoi(inJson["arg"].asString());
+  int code = digitalNotify(pin);
+  // signal error condition to cmd processor
+  if (code) {
+    outJson["status"] = "error";
+    outJson["msg"] = "Cannot be notified about changes to that pin";
+  } else {
+    // If succesfully added ISR to pin, report current pin's status.
+    noInterrupts();
+    pinStates.push(PinState(pin, digitalRead(pin)));
+    interrupts();
+  }
+}
+
+void Evebrain::_digitalStopNotify(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
+  int code = digitalStopNotify(atoi(inJson["arg"].asString()));
+  if (code) {
+    outJson["status"] = "error";
+    outJson["msg"] = "Cannot stop being notified about changes to that pin since cannot be notified about changes to that pin)";
+  }
 }
 
 void Evebrain::_gpio_pwm_16(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
@@ -571,8 +598,41 @@ void Evebrain::distanceSensor(){
 
 short Evebrain::digitalInput(byte pin){
   digitalWrite(pin, LOW);
-  pinMode(pin, INPUT); 
+  pinMode(pin, INPUT);
   return digitalRead(pin);
+}
+
+
+// Create the ISRs
+#define X(pinNum) MAKE_ISR_FOR_PIN(pinNum, pinStates)
+INTERRUPTABLE_PINS
+#undef X
+
+int Evebrain::digitalNotify(byte pin) {
+  switch(pin) {
+    #define X(pinNum)                                                              \
+    case (pinNum):                                                                 \
+      pinMode( (pinNum), INPUT);                                                   \
+      attachInterrupt(digitalPinToInterrupt( (pinNum) ), pin##pinNum##ISR, CHANGE);\
+      return 0;
+    INTERRUPTABLE_PINS
+    #undef X
+    default:
+      return 1; // signal error
+  }
+}
+
+int Evebrain::digitalStopNotify(byte pin) {
+  switch(pin) {
+    #define X(pinNum)                                     \
+    case (pinNum):                                        \
+      detachInterrupt(digitalPinToInterrupt( (pinNum) )); \
+      return 0;
+    INTERRUPTABLE_PINS
+    #undef X
+    default:
+      return 1; // signal error
+  }
 }
 
 void Evebrain::gpio_on(byte pin){
@@ -891,6 +951,24 @@ void Evebrain::serialHandler(){
   }
 }
 
+void Evebrain::digitalNotifyHandler() {
+  while (pinStates.numberOfElements()) {
+    // grab the interrupt notification, ensuring that this is not interrupted.
+    noInterrupts();
+    PinState state = pinStates.pop();
+    interrupts();
+    if (state != PinState::invalid) {
+      // Send the pin change notification
+      DynamicJsonBuffer outBuffer;
+      JsonObject &outMsg = outBuffer.createObject();
+      outMsg["msg"] = state.pinState;
+      char notifyID[20];
+      snprintf(notifyID, sizeof(notifyID), "pin_%d_status", state.pin);
+      cmdProcessor.notify(notifyID, outMsg);
+    }
+  }
+}
+
 void Evebrain::checkReady(){
   char snum[4];
   if(cmdProcessor.in_process && ready()){
@@ -953,6 +1031,7 @@ void Evebrain::loop()
   ota.runOTA();
   // connect to websocket client (if one is trying to connect) and check for incoming message
   websocketPoll();
+  digitalNotifyHandler();
 
   if (settings.doPost && ready() && (millis() - previousPostTime) >= (((unsigned long)settings.serverRequestTime)*1000)) {
     postToServer();
