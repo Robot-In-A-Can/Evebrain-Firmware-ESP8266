@@ -98,6 +98,8 @@ class Evebrain {
     void beep(int,int);
     short analogInput();
     short digitalInput(byte);
+    int digitalNotify(byte); // These two functions deal with the 
+    int digitalStopNotify(byte); // interrupt notifications
     void gpio_on(byte);
     void gpio_off(byte);
     void gpio_pwm(byte, byte);
@@ -137,6 +139,7 @@ class Evebrain {
     void version(char);
     void initCmds();
     void serialHandler();
+    void digitalNotifyHandler();
     void _version(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _ping(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _uptime(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
@@ -165,6 +168,8 @@ class Evebrain {
     void _temperature(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _humidity(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _digitalInput(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
+    void _digitalNotify(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
+    void _digitalStopNotify(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _gpio_on(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _gpio_off(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _gpio_pwm_16(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
