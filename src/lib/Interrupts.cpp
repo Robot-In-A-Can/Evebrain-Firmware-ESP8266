@@ -1,39 +1,48 @@
 #include "Interrupts.h"
+#include "SimplyAtomic/SimplyAtomic.h"
 
 PinStateQueue::PinStateQueue() {
-
 }
 
-bool PinStateQueue::push(PinState state) volatile {
-    if (full()) {
-        return false;
-    } else {
-        unsigned char charState = state.pin + (state.pinState << 7);
-        stack[numElements++] = charState;
-        return true;
-    }
-}
-PinState PinStateQueue::pop() volatile {
-    if (numElements > 0) {
-        unsigned char pinState = stack[0];
-        // Now, copy everything down one slot
-        for (int i = 1; i < numElements; i++) {
-            stack[i-1] = stack[i];
+bool PinStateQueue::push(PinState state) {
+    bool out;
+    ATOMIC() {
+        if (full()) {
+            out = false;
+        } else {
+            int index = (numElements + firstIndex) % QUEUE_SIZE;
+            stack[index] = state;
+            numElements++;
+            out = true;
         }
-        numElements--;
-        return PinState(pinState & 0x7F, pinState >> 7);
-    } else {
-        return PinState::invalid;
     }
+    return out;
 }
-int PinStateQueue::numberOfElements() volatile {
+PinState PinStateQueue::pop() {
+    PinState out = PinState::invalid;
+    ATOMIC() {
+        if (numElements > 0) {
+            out = stack[firstIndex++];
+            firstIndex %= QUEUE_SIZE;
+            numElements--;
+        }
+    }
+    return out;
+}
+int PinStateQueue::numberOfElements() {
     return numElements;
 }
-bool PinStateQueue::full() volatile {
-    return numElements == STACK_SIZE;
+bool PinStateQueue::full() {
+    return numElements == QUEUE_SIZE;
 }
 
 PinState PinState::invalid(127, 0);
+
+PinState::PinState(unsigned char pin, unsigned char pinState) : 
+                   pin(pin), pinState(pinState) {}
+
+PinState::PinState() : pin(0), pinState(0) {}
+
 bool PinState::operator==(const PinState& other) {
     return pin == other.pin && pinState == other.pinState;
 }

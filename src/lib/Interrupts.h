@@ -8,15 +8,15 @@
 
 class PinState {
     public:
-    PinState(unsigned char pin, unsigned char pinState): pin(pin), pinState(pinState) {}
-    PinState(): pin(0), pinState(0) {}
+    PinState(unsigned char pin, unsigned char pinState);
+    PinState();
     bool operator==(const PinState& other);
     bool operator!=(const PinState& other);
     unsigned char pin, pinState;
     static PinState invalid;
 };
 
-#define STACK_SIZE 10
+#define QUEUE_SIZE 10
 
 /**
  * Implements a queue for pin states. Is O(1) to insert, O(n)
@@ -25,14 +25,14 @@ class PinState {
 class PinStateQueue {
 public:
     PinStateQueue();
-    bool push(PinState state) volatile;
-    PinState pop() volatile;
-    int numberOfElements() volatile;
-    bool full() volatile;
+    bool push(PinState state);
+    PinState pop();
+    int numberOfElements();
+    bool full();
 private:
     // NOTE: each element of the stack has the pin number, and the MSbit is the state of the pin 
-    volatile unsigned char stack[STACK_SIZE];
-    volatile int numElements = 0;
+    PinState stack[QUEUE_SIZE];
+    volatile int numElements = 0, firstIndex = 0;
 };
 
 #define MAKE_ISR_FOR_PIN(X, NOTIFYSTACK)                         \

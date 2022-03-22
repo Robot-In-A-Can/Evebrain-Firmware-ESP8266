@@ -67,6 +67,7 @@ void ShiftStepper::resume(){
 
 void ShiftStepper::stop(){
   _remaining = 0;
+  microCounter = UCOUNTER_DEFAULT;
 }
 
 void ShiftStepper::turn(long steps, byte direction){
