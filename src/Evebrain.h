@@ -31,7 +31,7 @@
 #define STEPS_PER_DEGREE_V2  ((WHEEL_DISTANCE_V2 * 3.1416) / 360) * STEPS_PER_MM_V2
 
 
-#define Evebrain_SUB_VERSION "1.0"
+#define Evebrain_SUB_VERSION "2.0"
 
 #define EEPROM_OFFSET 0
 #define MAGIC_BYTE_1 0xF0
