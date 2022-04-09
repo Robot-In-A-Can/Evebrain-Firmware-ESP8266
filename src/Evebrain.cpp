@@ -1013,7 +1013,6 @@ unsigned long previousPostTime = 0;
 
 void Evebrain::loop()
 {
-
   ledHandler();
   servoHandler();
   calibrateHandler();
