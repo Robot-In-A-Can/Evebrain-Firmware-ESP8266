@@ -33,6 +33,8 @@
 
 #define Evebrain_SUB_VERSION "1.0"
 
+#define hmc5883l_address  0x1E
+
 #define EEPROM_OFFSET 0
 #define MAGIC_BYTE_1 0xF0
 #define MAGIC_BYTE_2 0x0D
@@ -86,6 +88,7 @@ class Evebrain {
     Evebrain();
     void begin();
     void begin(unsigned char);
+    void hmc5883l_init();
     void enableSerial();
     void enableWifi();
     void forward(int);
@@ -112,6 +115,7 @@ class Evebrain {
     void humidity();
     void distanceSensor();
     void distanceCheck();
+    void compassSensor();
     void postToServer();
     void postMsgToServer(char *);
     void receiveFromServer();
@@ -176,6 +180,7 @@ class Evebrain {
     void _gpio_pwm_10(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _gpio_pwm_5(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _distanceSensor(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
+    void _compassSensor(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _postToServer(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _getConfig(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _setConfig(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
@@ -185,11 +190,15 @@ class Evebrain {
     long duration;
     byte distanceVar;
     float temperatureVar;
+    int16_t compassX;
+    int16_t compassY;
+    int16_t compassZ;
     float humidityVar;
     int analogSensor;
     boolean humidityRead;
     boolean temperatureRead;
     boolean distanceRead;
+    boolean compassRead;
     boolean buzzerBeep;
     boolean servoMove;
     boolean nextADCRead;

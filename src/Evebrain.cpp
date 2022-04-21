@@ -50,6 +50,10 @@ Evebrain::Evebrain(){
   temperatureVar = 0;
   distanceRead = 0;
   distanceVar = 0;
+  compassRead = 0;
+  compassX = 0;
+  compassY = 0;
+  compassZ = 0;
   servoMove = 0;
   servoPosition = 0;
   buzzerBeep = 0;
@@ -63,6 +67,9 @@ void Evebrain::begin(unsigned char v){
   ShiftStepper::setup(SHIFT_REG_DATA, SHIFT_REG_CLOCK, SHIFT_REG_LATCH);
   // Set up the I2C lines for the ADC
   Wire.begin(I2C_DATA, I2C_CLOCK);
+
+  //magnetometer support
+  hmc5883l_init();
 
   // Set up the EEPROM
   EEPROM.begin(sizeof(settings)+2);
@@ -161,6 +168,16 @@ void Evebrain::saveSettings(){
   EEPROM.commit();
 }
 
+
+void Evebrain::hmc5883l_init(){   /* Magneto initialize function */
+  Wire.beginTransmission(hmc5883l_address);
+  Wire.write(0x00);
+  Wire.write(0x70); //8 samples per measurement, 15Hz data output rate, Normal measurement 
+  Wire.write(0xA0); //
+  Wire.write(0x00); //Continuous measurement mode
+  Wire.endTransmission();
+}
+
 void Evebrain::initCmds(){
   cmdProcessor.setEvebrain(self());
   //             Command name        Handler function             // Returns immediately
@@ -194,6 +211,7 @@ void Evebrain::initCmds(){
   cmdProcessor.addCmd("temperature",      &Evebrain::_temperature,      false);
   cmdProcessor.addCmd("humidity",         &Evebrain::_humidity,         false);
   cmdProcessor.addCmd("distanceSensor",   &Evebrain::_distanceSensor,   false);
+  cmdProcessor.addCmd("compassSensor",    &Evebrain::_compassSensor,    false);
   cmdProcessor.addCmd("postToServer",     &Evebrain::_postToServer,     false);
   cmdProcessor.addCmd("leftMotorF",       &Evebrain::_leftMotorForward, false);
   cmdProcessor.addCmd("leftMotorB",       &Evebrain::_leftMotorBackward,false);
@@ -313,6 +331,10 @@ void Evebrain::_readSensors(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonOb
 
 void Evebrain::_distanceSensor(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
   distanceSensor();
+}
+
+void Evebrain::_compassSensor(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
+  compassSensor();
 }
 
 void Evebrain::_postToServer(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
@@ -592,6 +614,21 @@ void Evebrain::distanceSensor(){
 }
 
 
+void Evebrain::compassSensor(){
+  Wire.beginTransmission(hmc5883l_address);
+  Wire.write(0x03);
+  Wire.endTransmission();
+
+  /* Read 16 bit x,y,z value (2's complement form) */
+  Wire.requestFrom(hmc5883l_address, 6);
+  compassX = (((int16_t)Wire.read()<<8) | (int16_t)Wire.read());
+  compassZ = (((int16_t)Wire.read()<<8) | (int16_t)Wire.read());
+  compassY = (((int16_t)Wire.read()<<8) | (int16_t)Wire.read());
+
+  timeTillComplete = millis() + 250;
+  compassRead = 1;
+  wait();
+}
 
 
 short Evebrain::digitalInput(byte pin){
@@ -984,6 +1021,11 @@ void Evebrain::checkReady(){
     else if (distanceRead){
       cmdProcessor.sendCompleteMSG(itoa(distanceVar, snum, 10));
       distanceRead = 0;
+    } 
+    //if compass is ready
+    else if (compassRead){
+      cmdProcessor.sendCompleteMSG(itoa(compassX, snum, 10));
+      compassRead = 0;
     } 
     //buzzer is done
     else if (buzzerBeep){
