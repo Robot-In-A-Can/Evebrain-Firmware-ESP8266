@@ -107,12 +107,9 @@ void CmdProcessor::sendComplete(){
   }
 }
 
-void CmdProcessor::sendCompleteMSG(char * msg){
+void CmdProcessor::sendCompleteMSG(ArduinoJson::JsonObject &outMsg){
   if(in_process){
     in_process = false;
-    StaticJsonBuffer<60> outBuffer;
-    JsonObject& outMsg = outBuffer.createObject();
-    outMsg["msg"] = msg;
     sendResponse("complete", outMsg, *current_id);
   }
 }

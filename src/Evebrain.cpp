@@ -1008,23 +1008,37 @@ void Evebrain::checkReady(){
     //if temperature ready is ready
     if (temperatureRead){
       temperatureVar = dht.getTemperature();
-      cmdProcessor.sendCompleteMSG(itoa(temperatureVar, snum, 10));
+      StaticJsonBuffer<60> outBuffer;
+      JsonObject& outMsg = outBuffer.createObject();
+      outMsg["msg"] = itoa(temperatureVar, snum, 10);
+      cmdProcessor.sendCompleteMSG(outMsg);
       temperatureRead = 0;
     }
     //if humidity is ready
     else if (humidityRead){
       humidityVar = dht.getHumidity();
-      cmdProcessor.sendCompleteMSG(itoa(humidityVar, snum, 10));
+      StaticJsonBuffer<60> outBuffer;
+      JsonObject& outMsg = outBuffer.createObject();
+      outMsg["msg"] = itoa(humidityVar, snum, 10);
+      cmdProcessor.sendCompleteMSG(outMsg);
       humidityRead = 0;
     } 
     //if distance is ready
     else if (distanceRead){
-      cmdProcessor.sendCompleteMSG(itoa(distanceVar, snum, 10));
+      StaticJsonBuffer<60> outBuffer;
+      JsonObject& outMsg = outBuffer.createObject();
+      outMsg["msg"] = itoa(distanceVar, snum, 10);
+      cmdProcessor.sendCompleteMSG(outMsg);
       distanceRead = 0;
     } 
     //if compass is ready
     else if (compassRead){
-      cmdProcessor.sendCompleteMSG(itoa(compassX, snum, 10));
+      DynamicJsonBuffer jsonBuffer;
+      JsonObject& outMsg = jsonBuffer.createObject();
+      outMsg["X"] = itoa(compassX, snum, 10);
+      outMsg["Y"] = itoa(compassY, snum, 10);
+      outMsg["Z"] = itoa(compassZ, snum, 10);
+      cmdProcessor.sendCompleteMSG(outMsg);
       compassRead = 0;
     } 
     //buzzer is done
@@ -1039,7 +1053,10 @@ void Evebrain::checkReady(){
       servoMove = 0;
     }
     else if (nextADCRead){
-      cmdProcessor.sendCompleteMSG(itoa(analogSensor, snum, 10));
+      StaticJsonBuffer<60> outBuffer;
+      JsonObject& outMsg = outBuffer.createObject();
+      outMsg["msg"] = itoa(analogSensor, snum, 10);
+      cmdProcessor.sendCompleteMSG(outMsg);
       nextADCRead = 0;
     }
     //if there is no message on complete
