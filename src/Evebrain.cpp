@@ -68,9 +68,6 @@ void Evebrain::begin(unsigned char v){
   // Set up the I2C lines for the ADC
   Wire.begin(I2C_DATA, I2C_CLOCK);
 
-  //magnetometer support
-  hmc5883l_init();
-
   // Set up the EEPROM
   EEPROM.begin(sizeof(settings)+2);
 
@@ -174,7 +171,7 @@ void Evebrain::hmc5883l_init(){   /* Magneto initialize function */
   Wire.write(0x00);
   Wire.write(0x70); //8 samples per measurement, 15Hz data output rate, Normal measurement 
   Wire.write(0xA0); //
-  Wire.write(0x00); //Continuous measurement mode
+  Wire.write(0x01); //OneShot measurement mode
   Wire.endTransmission();
 }
 
@@ -400,7 +397,7 @@ void Evebrain::_digitalStopNotify(ArduinoJson::JsonObject &inJson, ArduinoJson::
   int code = digitalStopNotify(atoi(inJson["arg"].asString()));
   if (code) {
     outJson["status"] = "error";
-    outJson["msg"] = "Cannot stop being notified about changes to that pin since cannot be notified about changes to that pin)";
+    outJson["msg"] = "Cannot stop being notified about changes to that pin since cannot be notified about changes to that pin";
   }
 }
 
@@ -615,6 +612,9 @@ void Evebrain::distanceSensor(){
 
 
 void Evebrain::compassSensor(){
+  //magnetometer support
+  hmc5883l_init();
+
   Wire.beginTransmission(hmc5883l_address);
   Wire.write(0x03);
   Wire.endTransmission();
@@ -625,7 +625,7 @@ void Evebrain::compassSensor(){
   compassZ = (((int16_t)Wire.read()<<8) | (int16_t)Wire.read());
   compassY = (((int16_t)Wire.read()<<8) | (int16_t)Wire.read());
 
-  timeTillComplete = millis() + 250;
+  timeTillComplete = millis() + 150;
   compassRead = 1;
   wait();
 }
@@ -1003,7 +1003,7 @@ void Evebrain::digitalNotifyHandler() {
 }
 
 void Evebrain::checkReady(){
-  char snum[4];
+  char snum[5];
   if(cmdProcessor.in_process && ready()){
     //if temperature ready is ready
     if (temperatureRead){
@@ -1035,9 +1035,9 @@ void Evebrain::checkReady(){
     else if (compassRead){
       DynamicJsonBuffer jsonBuffer;
       JsonObject& outMsg = jsonBuffer.createObject();
-      outMsg["X"] = itoa(compassX, snum, 10);
-      outMsg["Y"] = itoa(compassY, snum, 10);
-      outMsg["Z"] = itoa(compassZ, snum, 10);
+      outMsg["X"] = compassX;
+      outMsg["Y"] = compassY;
+      outMsg["Z"] = compassZ;
       cmdProcessor.sendCompleteMSG(outMsg);
       compassRead = 0;
     } 
