@@ -101,8 +101,8 @@ boolean CmdProcessor::processMsg(char * msg){
 void CmdProcessor::sendComplete(){
   if(in_process){
     in_process = false;
-    StaticJsonBuffer<5> outBuffer;
-    JsonObject& outMsg = outBuffer.createObject();
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject& outMsg = jsonBuffer.createObject();
     sendResponse("complete", outMsg, *current_id);
   }
 }
