@@ -101,18 +101,15 @@ boolean CmdProcessor::processMsg(char * msg){
 void CmdProcessor::sendComplete(){
   if(in_process){
     in_process = false;
-    StaticJsonBuffer<60> outBuffer;
-    JsonObject& outMsg = outBuffer.createObject();
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject& outMsg = jsonBuffer.createObject();
     sendResponse("complete", outMsg, *current_id);
   }
 }
 
-void CmdProcessor::sendCompleteMSG(char * msg){
+void CmdProcessor::sendCompleteMSG(ArduinoJson::JsonObject &outMsg){
   if(in_process){
     in_process = false;
-    StaticJsonBuffer<60> outBuffer;
-    JsonObject& outMsg = outBuffer.createObject();
-    outMsg["msg"] = msg;
     sendResponse("complete", outMsg, *current_id);
   }
 }

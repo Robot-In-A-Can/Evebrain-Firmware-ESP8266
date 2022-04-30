@@ -50,6 +50,10 @@ Evebrain::Evebrain(){
   temperatureVar = 0;
   distanceRead = 0;
   distanceVar = 0;
+  compassRead = 0;
+  compassX = 0;
+  compassY = 0;
+  compassZ = 0;
   servoMove = 0;
   servoPosition = 0;
   buzzerBeep = 0;
@@ -161,6 +165,16 @@ void Evebrain::saveSettings(){
   EEPROM.commit();
 }
 
+
+void Evebrain::hmc5883l_init(){   /* Magneto initialize function */
+  Wire.beginTransmission(hmc5883l_address);
+  Wire.write(0x00);
+  Wire.write(0x70); //8 samples per measurement, 15Hz data output rate, Normal measurement 
+  Wire.write(0xA0); //
+  Wire.write(0x01); //OneShot measurement mode
+  Wire.endTransmission();
+}
+
 void Evebrain::initCmds(){
   cmdProcessor.setEvebrain(self());
   //             Command name        Handler function             // Returns immediately
@@ -194,6 +208,7 @@ void Evebrain::initCmds(){
   cmdProcessor.addCmd("temperature",      &Evebrain::_temperature,      false);
   cmdProcessor.addCmd("humidity",         &Evebrain::_humidity,         false);
   cmdProcessor.addCmd("distanceSensor",   &Evebrain::_distanceSensor,   false);
+  cmdProcessor.addCmd("compassSensor",    &Evebrain::_compassSensor,    false);
   cmdProcessor.addCmd("postToServer",     &Evebrain::_postToServer,     false);
   cmdProcessor.addCmd("leftMotorF",       &Evebrain::_leftMotorForward, false);
   cmdProcessor.addCmd("leftMotorB",       &Evebrain::_leftMotorBackward,false);
@@ -315,6 +330,10 @@ void Evebrain::_distanceSensor(ArduinoJson::JsonObject &inJson, ArduinoJson::Jso
   distanceSensor();
 }
 
+void Evebrain::_compassSensor(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
+  compassSensor();
+}
+
 void Evebrain::_postToServer(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
   if(!(inJson.containsKey("arg") && inJson["arg"].is<JsonObject&>())) return;
 
@@ -378,7 +397,7 @@ void Evebrain::_digitalStopNotify(ArduinoJson::JsonObject &inJson, ArduinoJson::
   int code = digitalStopNotify(atoi(inJson["arg"].asString()));
   if (code) {
     outJson["status"] = "error";
-    outJson["msg"] = "Cannot stop being notified about changes to that pin since cannot be notified about changes to that pin)";
+    outJson["msg"] = "Cannot stop being notified about changes to that pin since cannot be notified about changes to that pin";
   }
 }
 
@@ -592,6 +611,24 @@ void Evebrain::distanceSensor(){
 }
 
 
+void Evebrain::compassSensor(){
+  //magnetometer support
+  hmc5883l_init();
+
+  Wire.beginTransmission(hmc5883l_address);
+  Wire.write(0x03);
+  Wire.endTransmission();
+
+  /* Read 16 bit x,y,z value (2's complement form) */
+  Wire.requestFrom(hmc5883l_address, 6);
+  compassX = (((int16_t)Wire.read()<<8) | (int16_t)Wire.read());
+  compassZ = (((int16_t)Wire.read()<<8) | (int16_t)Wire.read());
+  compassY = (((int16_t)Wire.read()<<8) | (int16_t)Wire.read());
+
+  timeTillComplete = millis() + 150;
+  compassRead = 1;
+  wait();
+}
 
 
 short Evebrain::digitalInput(byte pin){
@@ -966,24 +1003,43 @@ void Evebrain::digitalNotifyHandler() {
 }
 
 void Evebrain::checkReady(){
-  char snum[4];
+  char snum[5];
   if(cmdProcessor.in_process && ready()){
     //if temperature ready is ready
     if (temperatureRead){
       temperatureVar = dht.getTemperature();
-      cmdProcessor.sendCompleteMSG(itoa(temperatureVar, snum, 10));
+      StaticJsonBuffer<60> outBuffer;
+      JsonObject& outMsg = outBuffer.createObject();
+      outMsg["msg"] = itoa(temperatureVar, snum, 10);
+      cmdProcessor.sendCompleteMSG(outMsg);
       temperatureRead = 0;
     }
     //if humidity is ready
     else if (humidityRead){
       humidityVar = dht.getHumidity();
-      cmdProcessor.sendCompleteMSG(itoa(humidityVar, snum, 10));
+      StaticJsonBuffer<60> outBuffer;
+      JsonObject& outMsg = outBuffer.createObject();
+      outMsg["msg"] = itoa(humidityVar, snum, 10);
+      cmdProcessor.sendCompleteMSG(outMsg);
       humidityRead = 0;
     } 
     //if distance is ready
     else if (distanceRead){
-      cmdProcessor.sendCompleteMSG(itoa(distanceVar, snum, 10));
+      StaticJsonBuffer<60> outBuffer;
+      JsonObject& outMsg = outBuffer.createObject();
+      outMsg["msg"] = itoa(distanceVar, snum, 10);
+      cmdProcessor.sendCompleteMSG(outMsg);
       distanceRead = 0;
+    } 
+    //if compass is ready
+    else if (compassRead){
+      DynamicJsonBuffer jsonBuffer;
+      JsonObject& outMsg = jsonBuffer.createObject();
+      outMsg["X"] = compassX;
+      outMsg["Y"] = compassY;
+      outMsg["Z"] = compassZ;
+      cmdProcessor.sendCompleteMSG(outMsg);
+      compassRead = 0;
     } 
     //buzzer is done
     else if (buzzerBeep){
@@ -997,7 +1053,10 @@ void Evebrain::checkReady(){
       servoMove = 0;
     }
     else if (nextADCRead){
-      cmdProcessor.sendCompleteMSG(itoa(analogSensor, snum, 10));
+      StaticJsonBuffer<60> outBuffer;
+      JsonObject& outMsg = outBuffer.createObject();
+      outMsg["msg"] = itoa(analogSensor, snum, 10);
+      cmdProcessor.sendCompleteMSG(outMsg);
       nextADCRead = 0;
     }
     //if there is no message on complete

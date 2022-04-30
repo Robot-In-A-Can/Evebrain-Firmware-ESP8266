@@ -33,7 +33,7 @@ class CmdProcessor {
     void notify(const char[], ArduinoJson::JsonObject &);
     void setEvebrain(Evebrain &);
     void sendComplete();
-    void sendCompleteMSG(char * msg);
+    void sendCompleteMSG(ArduinoJson::JsonObject &);
     boolean processMsg(char * msg);
     boolean in_process;
   private:
