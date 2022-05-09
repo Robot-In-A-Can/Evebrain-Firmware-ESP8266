@@ -28,8 +28,11 @@
 #define PENUP_DELAY_V2 2000
 #define PENDOWN_DELAY_V2 1100
 #define STEPS_PER_MM_V2      STEPS_PER_TURN / CIRCUMFERENCE_MM_V2
+// the steps per degree of turn when steppers are acting as wheels in the bot
 #define STEPS_PER_DEGREE_V2  ((WHEEL_DISTANCE_V2 * 3.1416) / 360) * STEPS_PER_MM_V2
 
+#define PLOTTER_CIRCUMFERENCE_MM (3.1416 * 25.0f)
+#define PLOTTER_STEPS_PER_MM STEPS_PER_TURN / PLOTTER_CIRCUMFERENCE_MM
 
 #define Evebrain_SUB_VERSION "2.1"
 
@@ -110,6 +113,7 @@ class Evebrain {
     void rightMotorForward(int);
     void leftMotorBackward(int);
     void rightMotorBackward(int);
+    void plotterMove(int Xcoord, int Ycoord);
     void servo(int,int);
     void temperature();
     void humidity();
@@ -165,6 +169,7 @@ class Evebrain {
     void _rightMotorForward(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _leftMotorBackward(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _rightMotorBackward(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
+    void _plotterMove(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _analogInput(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _readSensors(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _servo(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
@@ -212,6 +217,7 @@ class Evebrain {
     boolean paused;
     float steps_per_mm;
     float steps_per_degree;
+    float plotter_steps_per_mm;
     int wheel_distance;
     long timeTillComplete;
     boolean calibratingSlack;
@@ -221,6 +227,7 @@ class Evebrain {
     int serial_buffer_pos;
     boolean wifiEnabled;
     char post[256];
+    int plotterX, plotterY;
     //const uint8_t default_fingerprint[20] = {0x56, 0x03, 0xf0, 0x21, 0x8b, 0x25, 0xad, 0x7b, 0xbd, 0xdf, 0x5d, 0x03, 0x65, 0x52, 0x84, 0x0a, 0x5f, 0xff, 0x46, 0x74};
 };
 #endif

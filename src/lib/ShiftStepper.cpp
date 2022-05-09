@@ -11,11 +11,13 @@ uint8_t ShiftStepper::currentBits;
 
 ShiftStepper::ShiftStepper(int offset) {
   _remaining = 0;
+  _remainingInBatch = 0;
   _paused = false;
   _fakeout = 0;
   motor_offset = offset;
   currentStep = 0;
   microCounter = UCOUNTER_DEFAULT;
+  cyclesToWait = 0;
   release();
   if(firstInstance){
     firstInstance->addNext(this);
@@ -67,11 +69,17 @@ void ShiftStepper::resume(){
 
 void ShiftStepper::stop(){
   _remaining = 0;
+  setRelSpeed(1.0);
   microCounter = UCOUNTER_DEFAULT;
 }
 
 void ShiftStepper::turn(long steps, byte direction){
   _remaining = steps;
+  if (cyclesToWait > 0) {
+    Serial.printf("cycles to wait:%d\n", cyclesToWait);
+    _remainingInBatch = _remaining < BATCH_SIZE ? _remaining : BATCH_SIZE;
+  }
+  Serial.printf("Steps:%d\n", steps);
   _dir = direction;
   lastDirection = direction;
   startTimer();
@@ -92,6 +100,14 @@ boolean ShiftStepper::ready(){
 
 long ShiftStepper::remaining(){
   return _remaining;
+}
+
+void ShiftStepper::setRelSpeed(float multiplier) {
+  if (multiplier >= 1.0) {
+    cyclesToWait = 0;
+  } else {
+    cyclesToWait = ((UCOUNTER_DEFAULT * BATCH_SIZE) / multiplier) - UCOUNTER_DEFAULT * BATCH_SIZE;
+  }
 }
 
 byte ICACHE_RAM_ATTR ShiftStepper::nextStep(){
@@ -117,16 +133,41 @@ byte ICACHE_RAM_ATTR ShiftStepper::nextStep(){
   }
 }
 
-void ICACHE_RAM_ATTR ShiftStepper::setNextStep(){
-  if(_remaining > 0 && !_paused){
-    if(!--microCounter){
-      microCounter = UCOUNTER_DEFAULT;
-      _remaining--;
-      updateBits(nextStep());
+void ICACHE_RAM_ATTR ShiftStepper::setNextStepSlowdown() {
+  if (_remainingInBatch > 0) { // if in a batch, proceed as normal
+    setNextStepFullspeed();
+    _remainingInBatch--; // decrement batch counter as well
+    // if now done with the batch, start slowdown.
+    if (!_remainingInBatch) {
+      _remainingCyclesToSlowdown = cyclesToWait;
     }
-  }else{
-    release();
-    stopTimer();
+  } else { // if in a slowdown
+    _remainingCyclesToSlowdown--;
+    // if now done with the slowdown, do next batch
+    if (!_remainingCyclesToSlowdown) {
+      _remainingInBatch = _remaining < BATCH_SIZE ? _remaining : BATCH_SIZE;
+    }
+  }
+}
+
+void ICACHE_RAM_ATTR ShiftStepper::setNextStepFullspeed() {
+  if(_remaining > 0 && !_paused){
+      if(!--microCounter){
+        microCounter = UCOUNTER_DEFAULT;
+        _remaining--;
+        updateBits(nextStep());
+      }
+    }else{
+      release();
+      stopTimer();
+  }
+}
+
+void ICACHE_RAM_ATTR ShiftStepper::setNextStep(){
+  if (cyclesToWait > 0) { // if we are running slower than normal
+    setNextStepSlowdown();
+  } else {
+    setNextStepFullspeed();
   }
 }
 
@@ -181,6 +222,7 @@ void ShiftStepper::startTimer(){
 void ShiftStepper::stopTimer(){
   timer1_disable();
   if (firstInstance && firstInstance->_remaining == 0 && firstInstance->microCounter == UCOUNTER_DEFAULT) {
+    firstInstance->stop();
     // This ensures that all other motors will be stopped
     // if the first one is stopped
     ShiftStepper* next = firstInstance->nextInstance;

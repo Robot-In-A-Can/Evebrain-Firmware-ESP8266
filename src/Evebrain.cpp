@@ -58,6 +58,9 @@ Evebrain::Evebrain(){
   servoPosition = 0;
   buzzerBeep = 0;
   wifiEnabled = false;
+
+  plotterX = 0;
+  plotterY = 0;
 }
 
 void Evebrain::begin(unsigned char v){
@@ -214,6 +217,7 @@ void Evebrain::initCmds(){
   cmdProcessor.addCmd("leftMotorB",       &Evebrain::_leftMotorBackward,false);
   cmdProcessor.addCmd("rightMotorF",      &Evebrain::_rightMotorForward,false);
   cmdProcessor.addCmd("rightMotorB",      &Evebrain::_rightMotorBackward,false);
+  cmdProcessor.addCmd("plotterMove",      &Evebrain::_plotterMove,      false);
   cmdProcessor.addCmd("servo",            &Evebrain::_servo,            false);
   cmdProcessor.addCmd("servoII",          &Evebrain::_servoII,          false);
   cmdProcessor.addCmd("getConfig",        &Evebrain::_getConfig,        true);
@@ -296,6 +300,10 @@ void Evebrain::_leftMotorBackward(ArduinoJson::JsonObject &inJson, ArduinoJson::
 
 void Evebrain::_rightMotorBackward(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
   rightMotorBackward(atoi(inJson["arg"].asString()));
+}
+
+void Evebrain::_plotterMove(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson) {
+  plotterMove(atoi(inJson["arg"]["X"].asString()), atoi(inJson["arg"]["Y"].asString()));
 }
 
 void Evebrain::_servo(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
@@ -825,6 +833,30 @@ void Evebrain::rightMotorBackward(int distance){
   wait();
 }
 
+void Evebrain::plotterMove(int Xcoord, int Ycoord){
+  int deltaX = Xcoord - plotterX, deltaY = Ycoord - plotterY;
+  byte rightMotorDir = deltaY > 0 ? FORWARD : BACKWARD, leftMotorDir = deltaX > 0 ? BACKWARD : FORWARD;
+
+  takeUpSlack(rightMotorDir, leftMotorDir);
+  rightMotor.turn(abs(deltaY) * plotter_steps_per_mm * settings.turnCalibration, rightMotorDir);
+  // Note: for now, only turning right motor (the Y axis)
+  leftMotor.turn(abs(deltaY) * plotter_steps_per_mm * settings.turnCalibration, leftMotorDir, 1);
+
+  //rightMotor.setRelSpeed(0.9);
+  //leftMotor.setRelSpeed(0.9);
+  /*if (rightMotorDir == FORWARD) {
+    rightMotorForward(abs(deltaY));
+  } else {
+    rightMotorBackward(abs(deltaY));
+  }*/
+  /*if (leftMotorDir == FORWARD) {
+    leftMotorForward(abs(deltaX));
+  } else {
+    leftMotorBackward(abs(deltaX));
+  }*/
+  plotterX = Xcoord;
+  plotterY = Ycoord;
+}
 
 void Evebrain::readSensors(byte pin){
   uint8_t temp[4];
@@ -857,6 +889,7 @@ void Evebrain::version(char v){
   sprintf(versionStr, "%d.%s", hwVersion, Evebrain_SUB_VERSION);
   steps_per_mm = STEPS_PER_MM_V2;
   steps_per_degree = STEPS_PER_DEGREE_V2;
+  plotter_steps_per_mm = PLOTTER_STEPS_PER_MM;
   wheel_distance = WHEEL_DISTANCE_V2;
 }
 
