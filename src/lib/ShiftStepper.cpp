@@ -106,7 +106,8 @@ void ShiftStepper::setRelSpeed(float multiplier) {
   if (multiplier >= 1.0) {
     cyclesToWait = 0;
   } else {
-    cyclesToWait = ((UCOUNTER_DEFAULT * BATCH_SIZE) / multiplier) - UCOUNTER_DEFAULT * BATCH_SIZE;
+    //cyclesToWait = ((UCOUNTER_DEFAULT * BATCH_SIZE) / multiplier) - UCOUNTER_DEFAULT * BATCH_SIZE;
+    cyclesToWait = ((BATCH_SIZE) / multiplier) - BATCH_SIZE;
   }
 }
 
