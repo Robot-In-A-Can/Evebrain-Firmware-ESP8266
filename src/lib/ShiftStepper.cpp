@@ -106,8 +106,8 @@ void ShiftStepper::setRelSpeed(float multiplier) {
   if (multiplier >= 1.0) {
     cyclesToWait = 0;
   } else {
-    //cyclesToWait = ((UCOUNTER_DEFAULT * BATCH_SIZE) / multiplier) - UCOUNTER_DEFAULT * BATCH_SIZE;
-    cyclesToWait = ((BATCH_SIZE) / multiplier) - BATCH_SIZE;
+    cyclesToWait = ((UCOUNTER_DEFAULT * BATCH_SIZE) / multiplier) - UCOUNTER_DEFAULT * BATCH_SIZE;
+    //cyclesToWait = ((BATCH_SIZE) / multiplier) - BATCH_SIZE;
   }
 }
 
@@ -136,13 +136,22 @@ byte ICACHE_RAM_ATTR ShiftStepper::nextStep(){
 
 void ICACHE_RAM_ATTR ShiftStepper::setNextStepSlowdown() {
   if (_remainingInBatch > 0) { // if in a batch, proceed as normal
-    setNextStepFullspeed();
-    _remainingInBatch--; // decrement batch counter as well
+    if(_remaining > 0 && !_paused){
+      if(!--microCounter){
+        microCounter = UCOUNTER_DEFAULT;
+        _remaining--;
+        _remainingInBatch--; // decrement batch counter as well
+        updateBits(nextStep());
+      }
+    }else{
+      release();
+      stopTimer();
+    }
     // if now done with the batch, start slowdown.
     if (!_remainingInBatch) {
       _remainingCyclesToSlowdown = cyclesToWait;
     }
-  } else { // if in a slowdown
+  } else { // if in a slowdown period
     _remainingCyclesToSlowdown--;
     // if now done with the slowdown, do next batch
     if (!_remainingCyclesToSlowdown) {
