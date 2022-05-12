@@ -116,13 +116,21 @@ byte ICACHE_RAM_ATTR ShiftStepper::nextStep(){
     switch(currentStep){
       case B0000:
       case B0001:
-        return (_dir == FORWARD ? B0010 : B1000);
+        return (_dir == FORWARD ? B0011 : B1001);
+      case B0011:
+        return (_dir == FORWARD ? B0010 : B0001);
       case B0010:
-        return (_dir == FORWARD ? B0100 : B0001);
+        return (_dir == FORWARD ? B0110 : B0011);
+      case B0110:
+        return (_dir == FORWARD ? B0100 : B0010);
       case B0100:
-        return (_dir == FORWARD ? B1000 : B0010);
+        return (_dir == FORWARD ? B1100 : B0110);
+      case B1100:
+        return (_dir == FORWARD ? B1000 : B0100);
       case B1000:
-        return (_dir == FORWARD ? B0001 : B0100);
+        return (_dir == FORWARD ? B1001 : B1100);
+      case B1001:
+        return (_dir == FORWARD ? B0001 : B1000);
       default:
         return B0000;
     }

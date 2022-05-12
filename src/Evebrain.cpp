@@ -836,8 +836,8 @@ void Evebrain::rightMotorBackward(int distance){
 void Evebrain::plotterMove(int Xcoord, int Ycoord){
   int deltaX = Xcoord - plotterX, deltaY = Ycoord - plotterY;
   byte rightMotorDir = deltaY > 0 ? FORWARD : BACKWARD, leftMotorDir = deltaX > 0 ? BACKWARD : FORWARD;
-  rightMotor.setRelSpeed(0.5);
-  leftMotor.setRelSpeed(0.5);
+  rightMotor.setRelSpeed(0.75);
+  leftMotor.setRelSpeed(0.75);
   takeUpSlack(rightMotorDir, leftMotorDir);
   rightMotor.turn(abs(deltaY) * plotter_steps_per_mm * settings.turnCalibration, rightMotorDir);
   // Note: for now, only turning right motor (the Y axis)
