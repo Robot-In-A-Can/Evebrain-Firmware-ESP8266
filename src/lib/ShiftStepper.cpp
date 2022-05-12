@@ -110,7 +110,7 @@ long ShiftStepper::remaining(){
 }
 
 void ShiftStepper::setRelSpeed(float multiplier) {
-  if (multiplier >= 1.0) {
+  if (multiplier >= 1.0 || multiplier < 0) {
     cyclesToWait = 0;
   } else {
     cyclesToWait = ((UCOUNTER_DEFAULT * BATCH_SIZE) / multiplier) - UCOUNTER_DEFAULT * BATCH_SIZE;
@@ -152,8 +152,10 @@ void ICACHE_RAM_ATTR ShiftStepper::setNextStepSlowdown() {
         updateBits(nextStep());
       }
     }else{
-      release();
-      stopTimer();
+      if (allStopped()) {
+        release();
+        stopTimer();
+      }
     }
     // if now done with the batch, start slowdown.
     if (!_remainingInBatch) {

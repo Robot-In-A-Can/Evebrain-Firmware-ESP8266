@@ -113,7 +113,7 @@ class Evebrain {
     void rightMotorForward(int);
     void leftMotorBackward(int);
     void rightMotorBackward(int);
-    void plotterMove(int Xcoord, int Ycoord);
+    void speedMove(int leftDistance, float leftSpeed, int rightDistance, float rightSpeed);
     void servo(int,int);
     void temperature();
     void humidity();
@@ -169,7 +169,7 @@ class Evebrain {
     void _rightMotorForward(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _leftMotorBackward(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _rightMotorBackward(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
-    void _plotterMove(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
+    void _speedMove(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _analogInput(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _readSensors(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _servo(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
@@ -227,7 +227,6 @@ class Evebrain {
     int serial_buffer_pos;
     boolean wifiEnabled;
     char post[256];
-    int plotterX, plotterY;
     //const uint8_t default_fingerprint[20] = {0x56, 0x03, 0xf0, 0x21, 0x8b, 0x25, 0xad, 0x7b, 0xbd, 0xdf, 0x5d, 0x03, 0x65, 0x52, 0x84, 0x0a, 0x5f, 0xff, 0x46, 0x74};
 };
 #endif
