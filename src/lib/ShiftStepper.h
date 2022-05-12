@@ -17,9 +17,8 @@ class ShiftStepper {
     static void setup(int, int, int);
     void instanceSetup();
     void turn(long steps, byte direction);
-    void turn(long steps, byte direction, byte fakeout);
-    void setFakeout(byte fakeout);
     boolean ready();
+    static boolean allStopped();
     long remaining();
     void release();
     static void triggerTop();
@@ -38,7 +37,6 @@ class ShiftStepper {
     byte _pinmask;
     volatile long _remaining;
     byte _dir;
-    byte _fakeout;
     
     // Both of these are related to slow operation. The way that works is that
     // it sends a batch of 10 pulses, then waits; that wait makes the stepper go more slowly.

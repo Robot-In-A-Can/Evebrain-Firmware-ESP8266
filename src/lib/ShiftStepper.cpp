@@ -13,7 +13,6 @@ ShiftStepper::ShiftStepper(int offset) {
   _remaining = 0;
   _remainingInBatch = 0;
   _paused = false;
-  _fakeout = 0;
   motor_offset = offset;
   currentStep = 0;
   microCounter = UCOUNTER_DEFAULT;
@@ -76,26 +75,34 @@ void ShiftStepper::stop(){
 void ShiftStepper::turn(long steps, byte direction){
   _remaining = steps;
   if (cyclesToWait > 0) {
-    Serial.printf("cycles to wait:%d\n", cyclesToWait);
+    //Serial.printf("cycles to wait:%d\n", cyclesToWait);
     _remainingInBatch = _remaining < BATCH_SIZE ? _remaining : BATCH_SIZE;
   }
-  Serial.printf("Steps:%d\n", steps);
+  //Serial.printf("Steps:%d\n", steps);
   _dir = direction;
   lastDirection = direction;
   startTimer();
 }
 
-void ShiftStepper::turn(long steps, byte direction, byte fakeout){
-  _fakeout = fakeout;
-  turn(steps, direction);
-}
-
-void ShiftStepper::setFakeout(byte fakeout){
-  _fakeout = fakeout;
-}
-
 boolean ShiftStepper::ready(){
   return (_remaining == 0);
+}
+
+boolean ShiftStepper::allStopped() {
+  if (!firstInstance) {
+    return true;
+  }
+  if (!(firstInstance->ready())) {
+    return false;
+  }
+  ShiftStepper* next = firstInstance->nextInstance;
+  while (next != nullptr) {
+    if (!(next->ready())) {
+      return false;
+    }
+    next = next->nextInstance;
+  }
+  return true;
 }
 
 long ShiftStepper::remaining(){
@@ -112,33 +119,26 @@ void ShiftStepper::setRelSpeed(float multiplier) {
 }
 
 byte ICACHE_RAM_ATTR ShiftStepper::nextStep(){
-  if(!_fakeout){
-    switch(currentStep){
-      case B0000:
-      case B0001:
-        return (_dir == FORWARD ? B0011 : B1001);
-      case B0011:
-        return (_dir == FORWARD ? B0010 : B0001);
-      case B0010:
-        return (_dir == FORWARD ? B0110 : B0011);
-      case B0110:
-        return (_dir == FORWARD ? B0100 : B0010);
-      case B0100:
-        return (_dir == FORWARD ? B1100 : B0110);
-      case B1100:
-        return (_dir == FORWARD ? B1000 : B0100);
-      case B1000:
-        return (_dir == FORWARD ? B1001 : B1100);
-      case B1001:
-        return (_dir == FORWARD ? B0001 : B1000);
-      default:
-        return B0000;
-    }
-  } else {
-    switch(currentStep){
-      default:
-        return B0000;
-    }
+  switch(currentStep){
+    case B0000:
+    case B0001:
+      return (_dir == FORWARD ? B0011 : B1001);
+    case B0011:
+      return (_dir == FORWARD ? B0010 : B0001);
+    case B0010:
+      return (_dir == FORWARD ? B0110 : B0011);
+    case B0110:
+      return (_dir == FORWARD ? B0100 : B0010);
+    case B0100:
+      return (_dir == FORWARD ? B1100 : B0110);
+    case B1100:
+      return (_dir == FORWARD ? B1000 : B0100);
+    case B1000:
+      return (_dir == FORWARD ? B1001 : B1100);
+    case B1001:
+      return (_dir == FORWARD ? B0001 : B1000);
+    default:
+      return B0000;
   }
 }
 
@@ -176,8 +176,10 @@ void ICACHE_RAM_ATTR ShiftStepper::setNextStepFullspeed() {
         updateBits(nextStep());
       }
     }else{
-      release();
-      stopTimer();
+      if (allStopped()) {
+        release();
+        stopTimer();
+      }
   }
 }
 
@@ -212,6 +214,7 @@ void ICACHE_RAM_ATTR ShiftStepper::updateBits(uint8_t bits){
 
 void ICACHE_RAM_ATTR ShiftStepper::sendBits(){
   if(currentBits != lastBits){
+    //Serial.printf("the bits: %x\n", currentBits);
     lastBits = currentBits;
     shiftOut(data_pin, clock_pin, MSBFIRST, currentBits);
     digitalWrite(latch_pin, HIGH);

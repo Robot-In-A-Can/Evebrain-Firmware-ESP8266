@@ -694,7 +694,7 @@ void Evebrain::gpio_pwm(byte pin, byte value){
 
 void Evebrain::leftMotorForward(int distance){
   takeUpSlack(BACKWARD, FORWARD);
-  rightMotor.turn(distance * steps_per_degree * settings.turnCalibration, BACKWARD,1);
+  //rightMotor.turn(distance * steps_per_degree * settings.turnCalibration, BACKWARD,1);
   leftMotor.turn(distance * steps_per_degree * settings.turnCalibration, FORWARD);
   wait();
 }
@@ -815,13 +815,13 @@ void Evebrain::servo(int angle, int pin){
 void Evebrain::rightMotorForward(int distance){
   takeUpSlack(FORWARD, BACKWARD);
   rightMotor.turn(distance * steps_per_degree * settings.turnCalibration, FORWARD);
-  leftMotor.turn(distance * steps_per_degree * settings.turnCalibration, BACKWARD,1);
+  //leftMotor.turn(distance * steps_per_degree * settings.turnCalibration, BACKWARD,1);
   wait();
 }
 
 void Evebrain::leftMotorBackward(int distance){
   takeUpSlack(FORWARD, BACKWARD);
-  rightMotor.turn(distance * steps_per_degree * settings.turnCalibration, FORWARD,1);
+  //rightMotor.turn(distance * steps_per_degree * settings.turnCalibration, FORWARD,1);
   leftMotor.turn(distance * steps_per_degree * settings.turnCalibration, BACKWARD);
   wait();
 }
@@ -829,7 +829,7 @@ void Evebrain::leftMotorBackward(int distance){
 void Evebrain::rightMotorBackward(int distance){
   takeUpSlack(BACKWARD, FORWARD);
   rightMotor.turn(distance * steps_per_degree * settings.turnCalibration, BACKWARD);
-  leftMotor.turn(distance * steps_per_degree * settings.turnCalibration, FORWARD,1);
+  //leftMotor.turn(distance * steps_per_degree * settings.turnCalibration, FORWARD,1);
   wait();
 }
 
@@ -841,8 +841,7 @@ void Evebrain::plotterMove(int Xcoord, int Ycoord){
   takeUpSlack(rightMotorDir, leftMotorDir);
   rightMotor.turn(abs(deltaY) * plotter_steps_per_mm * settings.turnCalibration, rightMotorDir);
   // Note: for now, only turning right motor (the Y axis)
-  leftMotor.turn(abs(deltaY) * plotter_steps_per_mm * settings.turnCalibration, leftMotorDir, 1);
-
+  
   //rightMotor.setRelSpeed(0.9);
   //leftMotor.setRelSpeed(0.9);
   /*if (rightMotorDir == FORWARD) {
@@ -1096,8 +1095,6 @@ void Evebrain::checkReady(){
     //if there is no message on complete
     else {
       cmdProcessor.sendComplete();
-      leftMotor.setFakeout(0);
-      rightMotor.setFakeout(0);
     }
   }
 }
