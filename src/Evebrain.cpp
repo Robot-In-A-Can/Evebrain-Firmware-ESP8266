@@ -301,9 +301,15 @@ void Evebrain::_rightMotorBackward(ArduinoJson::JsonObject &inJson, ArduinoJson:
 
 void Evebrain::_speedMove(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson) {
   float leftSpeed = inJson["arg"]["leftSpeed"], rightSpeed = inJson["arg"]["rightSpeed"];
+  int leftDistance = inJson["arg"]["leftDistance"], rightDistance = inJson["arg"]["rightDistance"];
   if (leftSpeed < 0.0 || leftSpeed > 1.0) {
     outJson["status"] = "error";
     outJson["msg"] = "Left speed is out of range, must be within (0,1]";
+    return;
+  }
+  if (leftSpeed == 0.0 && leftDistance != 0) {
+    outJson["status"] = "error";
+    outJson["msg"] = "Left speed is out of range, cannot be 0 when moving non-zero distance.";
     return;
   }
   if (rightSpeed < 0.0 || rightSpeed > 1.0) {
@@ -311,9 +317,20 @@ void Evebrain::_speedMove(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObje
     outJson["msg"] = "Right speed is out of range, must be within (0,1]";
     return;
   }
+  if (rightSpeed == 0.0 && rightDistance != 0) {
+    outJson["status"] = "error";
+    outJson["msg"] = "Right speed is out of range, cannot be 0 when moving non-zero distance.";
+    return;
+  }
+  // make sure speed is not too low.
+  if (leftSpeed < 0.1) {
+    leftSpeed = 0.1;
+  }
+  if (rightSpeed < 0.1) {
+    rightSpeed = 0.1;
+  }
 
-  speedMove(inJson["arg"]["leftDistance"], leftSpeed,
-   inJson["arg"]["rightDistance"], rightSpeed);
+  speedMove(leftDistance, leftSpeed, rightDistance, rightSpeed);
 }
 
 void Evebrain::_servo(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
@@ -846,8 +863,12 @@ void Evebrain::speedMove(int leftDistance, float leftSpeed, int rightDistance, f
   rightMotor.setRelSpeed(rightSpeed);
   leftMotor.setRelSpeed(leftSpeed);
   takeUpSlack(rightMotorDir, leftMotorDir);
-  rightMotor.turn(abs(rightDistance) * plotter_steps_per_mm * settings.turnCalibration, rightMotorDir);
-  leftMotor.turn(abs(leftDistance) * plotter_steps_per_mm * settings.turnCalibration, leftMotorDir);
+  if (rightDistance != 0) {
+    rightMotor.turn(abs(rightDistance) * plotter_steps_per_mm * settings.turnCalibration, rightMotorDir);
+  }
+  if (leftDistance != 0) {
+    leftMotor.turn(abs(leftDistance) * plotter_steps_per_mm * settings.turnCalibration, leftMotorDir);
+  }
 }
 
 void Evebrain::readSensors(byte pin){
