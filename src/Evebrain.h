@@ -20,8 +20,9 @@
 #define FORCE_SETUP 1
 #define SERIAL_BUFFER_LENGTH 180
 
-// The steppers have a gear ratio of 1:63.7 and have 32 steps per turn. 32 x 63.7 = 2038.4
-#define STEPS_PER_TURN    2038.0f
+// The steppers have a gear ratio of 1:63.7 and have 32 steps per turn, and we are driving with half steps.
+// 2 x 32 x 63.7 = 4076.8
+#define STEPS_PER_TURN    4076.8f
 
 #define CIRCUMFERENCE_MM_V2  254.4f
 #define WHEEL_DISTANCE_V2    108.5f
@@ -34,7 +35,7 @@
 #define PLOTTER_CIRCUMFERENCE_MM (3.1416 * 25.0f)
 #define PLOTTER_STEPS_PER_MM STEPS_PER_TURN / PLOTTER_CIRCUMFERENCE_MM
 
-#define Evebrain_SUB_VERSION "2.1"
+#define Evebrain_SUB_VERSION "3.0"
 
 #define hmc5883l_address  0x1E
 

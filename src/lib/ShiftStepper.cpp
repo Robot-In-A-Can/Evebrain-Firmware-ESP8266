@@ -85,7 +85,7 @@ void ShiftStepper::turn(long steps, byte direction){
 }
 
 boolean ShiftStepper::ready(){
-  return (_remaining == 0);
+  return (_remaining == 0  && _remainingCyclesToSlowdown == 0);
 }
 
 boolean ShiftStepper::allStopped() {
@@ -143,7 +143,8 @@ byte ICACHE_RAM_ATTR ShiftStepper::nextStep(){
 }
 
 void ICACHE_RAM_ATTR ShiftStepper::setNextStepSlowdown() {
-  if (_remainingInBatch > 0) { // if in a batch, proceed as normal
+  if (_remainingInBatch > 0) {
+    // if in a batch, proceed as normal
     if(_remaining > 0 && !_paused){
       if(!--microCounter){
         microCounter = UCOUNTER_DEFAULT;
@@ -151,21 +152,24 @@ void ICACHE_RAM_ATTR ShiftStepper::setNextStepSlowdown() {
         _remainingInBatch--; // decrement batch counter as well
         updateBits(nextStep());
       }
-    }else{
-      if (allStopped()) {
-        release();
-        stopTimer();
-      }
     }
     // if now done with the batch, start slowdown.
     if (!_remainingInBatch) {
       _remainingCyclesToSlowdown = cyclesToWait;
     }
-  } else { // if in a slowdown period
+  } else if (_remainingCyclesToSlowdown > 0) {
+    // if in a slowdown period
     _remainingCyclesToSlowdown--;
     // if now done with the slowdown, do next batch
     if (!_remainingCyclesToSlowdown) {
       _remainingInBatch = _remaining < BATCH_SIZE ? _remaining : BATCH_SIZE;
+    }
+  } else {
+    // if done moving
+    setRelSpeed(1.0);
+    if (allStopped()) {
+        release();
+        stopTimer();
     }
   }
 }
@@ -178,6 +182,7 @@ void ICACHE_RAM_ATTR ShiftStepper::setNextStepFullspeed() {
         updateBits(nextStep());
       }
     }else{
+      setRelSpeed(1.0); // makes sure that speed is normal on next move.
       if (allStopped()) {
         release();
         stopTimer();
@@ -206,11 +211,26 @@ void ICACHE_RAM_ATTR ShiftStepper::trigger(){
   }
 }
 
+/**
+ * @brief Takes a byte, shifts it by a certain number of places,
+ * while wrapping around the bits that would normally fall off
+ * @param in Byte to process
+ * @param amountToShift Amount of places to shift (tested for positive only)
+ * @return byte The input byte, shifted.
+ */
+byte shiftWraparound(byte in, int amountToShift) {
+  return in << amountToShift | in >> (8 - amountToShift);
+}
+
 void ICACHE_RAM_ATTR ShiftStepper::updateBits(uint8_t bits){
   currentStep = bits;
+  // clear upper 4 bits of 'bits'
   bits &= B1111;
-  bits <<= (motor_offset*4);
-  currentBits &= ~(B1111 << (motor_offset *4));
+  // Offset bits according to the motor.
+  bits = shiftWraparound(bits, motor_offset);
+  // clear the bits that correspond to this motor
+  currentBits &= ~(shiftWraparound(B1111, motor_offset));
+  // set the bits for this motor.
   currentBits |= bits;
 }
 

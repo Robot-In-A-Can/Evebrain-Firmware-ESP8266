@@ -7,8 +7,12 @@ DHTesp dht;
 CmdProcessor cmdProcessor;
 SerialWebSocket v1ws(Serial);
 
-ShiftStepper rightMotor(1);
-ShiftStepper leftMotor(0);
+// To explain: This is the mapping from bit in the shift register to stepper:
+// R L L L L R R R
+// the left motor is offset by 1 (counting from the left),
+// the right motor is offset by 5.
+ShiftStepper rightMotor(5);
+ShiftStepper leftMotor(1);
 
 HTTPClient http;
 //fingerprint disabled
