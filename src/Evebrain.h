@@ -20,18 +20,22 @@
 #define FORCE_SETUP 1
 #define SERIAL_BUFFER_LENGTH 180
 
-// The steppers have a gear ratio of 1:63.7 and have 32 steps per turn. 32 x 63.7 = 2038.4
-#define STEPS_PER_TURN    2038.0f
+// The steppers have a gear ratio of 1:63.7 and have 32 steps per turn, and we are driving with half steps.
+// 2 x 32 x 63.7 = 4076.8
+#define STEPS_PER_TURN    4076.8f
 
 #define CIRCUMFERENCE_MM_V2  254.4f
 #define WHEEL_DISTANCE_V2    108.5f
 #define PENUP_DELAY_V2 2000
 #define PENDOWN_DELAY_V2 1100
 #define STEPS_PER_MM_V2      STEPS_PER_TURN / CIRCUMFERENCE_MM_V2
+// the steps per degree of turn when steppers are acting as wheels in the bot
 #define STEPS_PER_DEGREE_V2  ((WHEEL_DISTANCE_V2 * 3.1416) / 360) * STEPS_PER_MM_V2
 
+#define PLOTTER_CIRCUMFERENCE_MM (3.1416 * 25.0f)
+#define PLOTTER_STEPS_PER_MM STEPS_PER_TURN / PLOTTER_CIRCUMFERENCE_MM
 
-#define Evebrain_SUB_VERSION "1.0"
+#define Evebrain_SUB_VERSION "3.0"
 
 #define hmc5883l_address  0x1E
 
@@ -110,6 +114,7 @@ class Evebrain {
     void rightMotorForward(int);
     void leftMotorBackward(int);
     void rightMotorBackward(int);
+    void speedMove(int leftDistance, float leftSpeed, int rightDistance, float rightSpeed);
     void servo(int,int);
     void temperature();
     void humidity();
@@ -165,6 +170,7 @@ class Evebrain {
     void _rightMotorForward(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _leftMotorBackward(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _rightMotorBackward(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
+    void _speedMove(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _analogInput(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _readSensors(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _servo(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
@@ -212,6 +218,7 @@ class Evebrain {
     boolean paused;
     float steps_per_mm;
     float steps_per_degree;
+    float plotter_steps_per_mm;
     int wheel_distance;
     long timeTillComplete;
     boolean calibratingSlack;

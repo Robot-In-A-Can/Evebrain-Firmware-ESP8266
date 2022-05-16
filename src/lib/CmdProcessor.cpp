@@ -82,7 +82,14 @@ boolean CmdProcessor::processMsg(char * msg){
           (_m->*(_cmds[cmd_num].func))(inMsg, outMsg);
           strcpy(current_id, (char*)id);
           in_process = true;
-          sendResponse("accepted", outMsg, *id);
+          
+          // kludge to allow an error condition to notify Snap
+          if (outMsg.containsKey("status") &&
+            strcmp(outMsg["status"], "error") == 0) {
+            sendResponse("error", outMsg, *id);
+          } else {
+            sendResponse("accepted", outMsg, *id);
+          }
         }
       }
     }else{
