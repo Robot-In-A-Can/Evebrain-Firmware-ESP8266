@@ -36,7 +36,7 @@
 #define EEPROM_OFFSET 0
 #define MAGIC_BYTE_1 0xF0
 #define MAGIC_BYTE_2 0x0D
-#define SETTINGS_VERSION 1
+#define SETTINGS_VERSION 2
 
 #define SERVO_PULSES 30
 #define DHTPIN 16 

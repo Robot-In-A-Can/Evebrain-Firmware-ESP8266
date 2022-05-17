@@ -477,6 +477,8 @@ void Evebrain::_getConfig(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObje
   msg["ap_encrypted"] = !!strlen(settings.ap_pass);
   msg["discovery"] = settings.discovery;
   msg["wifi_mode"] = modes[EvebrainWifi::getWifiMode()];
+  msg["wheelDiameter"] = settings.wheelDiameter;
+  msg["wheelDistance"] = settings.wheelDistance;
 }
 
 void Evebrain::_setConfig(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
@@ -741,13 +743,6 @@ void Evebrain::gpio_pwm(byte pin, byte value){
   analogWrite(pin, value);
 }
 
-void Evebrain::leftMotorForward(int distance){
-  takeUpSlack(BACKWARD, FORWARD);
-  leftMotor.turn(distance * steps_per_degree * settings.turnCalibration, FORWARD);
-  wait();
-}
-
-
 void Evebrain::receiveFromServer() {
   client.setInsecure();
   char getlink[100];
@@ -860,27 +855,31 @@ void Evebrain::servo(int angle, int pin){
   }
 }
 
+void Evebrain::leftMotorForward(int distance){
+  takeUpSlack(BACKWARD, FORWARD);
+  leftMotor.turn(distance * steps_per_mm * settings.turnCalibration, FORWARD);
+  wait();
+}
+
 void Evebrain::rightMotorForward(int distance){
   takeUpSlack(FORWARD, BACKWARD);
-  rightMotor.turn(distance * steps_per_degree * settings.turnCalibration, FORWARD);
+  rightMotor.turn(distance * steps_per_mm * settings.turnCalibration, FORWARD);
   wait();
 }
 
 void Evebrain::leftMotorBackward(int distance){
   takeUpSlack(FORWARD, BACKWARD);
-  leftMotor.turn(distance * steps_per_degree * settings.turnCalibration, BACKWARD);
+  leftMotor.turn(distance * steps_per_mm * settings.turnCalibration, BACKWARD);
   wait();
 }
 
 void Evebrain::rightMotorBackward(int distance){
   takeUpSlack(BACKWARD, FORWARD);
-  rightMotor.turn(distance * steps_per_degree * settings.turnCalibration, BACKWARD);
+  rightMotor.turn(distance * steps_per_mm * settings.turnCalibration, BACKWARD);
   wait();
 }
 
 void Evebrain::speedMove(int leftDistance, float leftSpeed, int rightDistance, float rightSpeed){
-  //Serial.printf("ldist %d lspeed %f rdist %d rspeed %f\n", leftDistance, leftSpeed, rightDistance, rightSpeed);
-
   byte rightMotorDir = rightDistance > 0 ? FORWARD : BACKWARD, leftMotorDir = leftDistance > 0 ? BACKWARD : FORWARD;
   rightMotor.setRelSpeed(rightSpeed);
   leftMotor.setRelSpeed(leftSpeed);

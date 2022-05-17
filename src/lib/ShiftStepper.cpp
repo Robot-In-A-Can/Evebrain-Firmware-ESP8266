@@ -76,7 +76,6 @@ void ShiftStepper::stop(){
 void ShiftStepper::turn(long steps, byte direction){
   _remaining = steps;
   if (cyclesToWait > 0) {
-    //Serial.printf("cycles to wait:%d\n", cyclesToWait);
     _remainingInBatch = _remaining < BATCH_SIZE ? _remaining : BATCH_SIZE;
   }
   //Serial.printf("Steps:%d\n", steps);
@@ -115,7 +114,6 @@ void ShiftStepper::setRelSpeed(float multiplier) {
     cyclesToWait = 0;
   } else {
     cyclesToWait = ((UCOUNTER_DEFAULT * BATCH_SIZE) / multiplier) - UCOUNTER_DEFAULT * BATCH_SIZE;
-    //cyclesToWait = ((BATCH_SIZE) / multiplier) - BATCH_SIZE;
   }
 }
 
@@ -237,7 +235,6 @@ void ICACHE_RAM_ATTR ShiftStepper::updateBits(uint8_t bits){
 
 void ICACHE_RAM_ATTR ShiftStepper::sendBits(){
   if(currentBits != lastBits){
-    //Serial.printf("the bits: %x\n", currentBits);
     lastBits = currentBits;
     shiftOut(data_pin, clock_pin, MSBFIRST, currentBits);
     digitalWrite(latch_pin, HIGH);
