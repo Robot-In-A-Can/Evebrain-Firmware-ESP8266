@@ -9,7 +9,7 @@
 #define DEFAULT_STEP_PERIOD 1500
 #define UCOUNTER_DEFAULT DEFAULT_STEP_PERIOD/BASE_INTERRUPT_US
 
-#define BATCH_SIZE 10
+#define BATCH_SIZE 4
 
 class ShiftStepper {
   public:

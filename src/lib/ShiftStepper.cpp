@@ -68,6 +68,7 @@ void ShiftStepper::resume(){
 
 void ShiftStepper::stop(){
   _remaining = 0;
+  _remainingCyclesToSlowdown = 0;
   setRelSpeed(1.0);
   microCounter = UCOUNTER_DEFAULT;
 }
