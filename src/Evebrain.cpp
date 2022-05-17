@@ -7,7 +7,7 @@ DHTesp dht;
 CmdProcessor cmdProcessor;
 SerialWebSocket v1ws(Serial);
 
-// To explain: This is the mapping from bit in the shift register to stepper:
+// To explain: This is the mapping from bits in the shift register to stepper:
 // R L L L L R R R
 // the left motor is offset by 1 (counting from the left),
 // the right motor is offset by 5.
@@ -117,6 +117,11 @@ void Evebrain::enableWifi(){
   wifiEnabled = true;
 }
 
+void Evebrain::calculateForWheels() {
+  steps_per_mm = STEPS_PER_TURN / (PI * settings.wheelDiameter);
+  steps_per_degree = ((settings.wheelDistance * PI) / 360) * steps_per_mm;
+}
+
 void Evebrain::initSettings(){
   if(EEPROM.read(EEPROM_OFFSET) == MAGIC_BYTE_1 && EEPROM.read(EEPROM_OFFSET + 1) == MAGIC_BYTE_2 && EEPROM.read(EEPROM_OFFSET + 2) == SETTINGS_VERSION){
     // We've previously written something valid to the EEPROM
@@ -132,6 +137,7 @@ void Evebrain::initSettings(){
        settings.turnCalibration < 1.5f){
       // The values look OK so let's leave them as they are
       if (digitalRead(RESET) == 0) {
+        calculateForWheels();
         return;
       }
     }
@@ -141,6 +147,9 @@ void Evebrain::initSettings(){
   settings.slackCalibration = 14;
   settings.moveCalibration = 1.0f;
   settings.turnCalibration = 1.0f;
+  settings.wheelDiameter = DEFAULT_DIAMETER_MM_V2;
+  settings.wheelDistance = DEFAULT_WHEEL_DISTANCE_V2;
+  calculateForWheels();
   settings.sta_ssid[0] = 0;
   settings.sta_pass[0] = 0;
   settings.sta_dhcp = true;
@@ -523,6 +532,15 @@ void Evebrain::_setConfig(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObje
   if(inJson["arg"].asObject().containsKey("discovery")){
     settings.discovery = inJson["arg"]["discovery"];
   }
+  // The wheel diameter
+  if (inJson["arg"].asObject().containsKey("wheelDiameter")) {
+    settings.wheelDiameter = inJson["arg"]["wheelDiameter"];
+  }
+  // The distance between wheels
+  if (inJson["arg"].asObject().containsKey("wheelDistance")) {
+    settings.wheelDistance = inJson["arg"]["wheelDistance"];
+  }
+  calculateForWheels();
   wifi.setupWifi();
   saveSettings();
 }
@@ -868,10 +886,10 @@ void Evebrain::speedMove(int leftDistance, float leftSpeed, int rightDistance, f
   leftMotor.setRelSpeed(leftSpeed);
   takeUpSlack(rightMotorDir, leftMotorDir);
   if (rightDistance != 0) {
-    rightMotor.turn(abs(rightDistance) * plotter_steps_per_mm * settings.turnCalibration, rightMotorDir);
+    rightMotor.turn(abs(rightDistance) * steps_per_mm * settings.turnCalibration, rightMotorDir);
   }
   if (leftDistance != 0) {
-    leftMotor.turn(abs(leftDistance) * plotter_steps_per_mm * settings.turnCalibration, leftMotorDir);
+    leftMotor.turn(abs(leftDistance) * steps_per_mm * settings.turnCalibration, leftMotorDir);
   }
 }
 
@@ -904,10 +922,6 @@ void Evebrain::readSensors(byte pin){
 void Evebrain::version(char v){
   hwVersion = v;
   sprintf(versionStr, "%d.%s", hwVersion, Evebrain_SUB_VERSION);
-  steps_per_mm = STEPS_PER_MM_V2;
-  steps_per_degree = STEPS_PER_DEGREE_V2;
-  plotter_steps_per_mm = PLOTTER_STEPS_PER_MM;
-  wheel_distance = WHEEL_DISTANCE_V2;
 }
 
 
