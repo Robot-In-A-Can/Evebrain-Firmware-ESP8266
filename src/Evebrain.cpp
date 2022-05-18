@@ -248,6 +248,10 @@ void Evebrain::_uptime(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject 
 }
 
 void Evebrain::_pause(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
+  JsonObject& msg = outJson.createNestedObject("msg");
+  msg["leftMotorRemaining"] = ((float) leftMotor.remaining()) / steps_per_mm;
+  msg["rightMotorRemaining"] = ((float) rightMotor.remaining()) / steps_per_mm;
+  
   pause();
 }
 
@@ -885,10 +889,12 @@ void Evebrain::speedMove(float leftDistance, float leftSpeed, float rightDistanc
   leftMotor.setRelSpeed(leftSpeed);
   takeUpSlack(rightMotorDir, leftMotorDir);
   if (rightDistance != 0) {
-    rightMotor.turn(abs(rightDistance) * steps_per_mm * settings.turnCalibration, rightMotorDir);
+    long steps = abs(rightDistance) * steps_per_mm * settings.turnCalibration;
+    rightMotor.turn(steps, rightMotorDir);
   }
   if (leftDistance != 0) {
-    leftMotor.turn(abs(leftDistance) * steps_per_mm * settings.turnCalibration, leftMotorDir);
+    long steps = abs(leftDistance) * steps_per_mm * settings.turnCalibration;
+    leftMotor.turn(steps, leftMotorDir);
   }
 }
 
