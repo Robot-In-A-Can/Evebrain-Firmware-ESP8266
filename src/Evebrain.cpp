@@ -314,7 +314,7 @@ void Evebrain::_rightMotorBackward(ArduinoJson::JsonObject &inJson, ArduinoJson:
 
 void Evebrain::_speedMove(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson) {
   float leftSpeed = inJson["arg"]["leftSpeed"], rightSpeed = inJson["arg"]["rightSpeed"];
-  int leftDistance = inJson["arg"]["leftDistance"], rightDistance = inJson["arg"]["rightDistance"];
+  float leftDistance = inJson["arg"]["leftDistance"], rightDistance = inJson["arg"]["rightDistance"];
   if (leftSpeed < 0.0 || leftSpeed > 1.0) {
     outJson["status"] = "error";
     outJson["msg"] = "Left speed is out of range, must be within (0,1]";
@@ -879,8 +879,8 @@ void Evebrain::rightMotorBackward(int distance){
   wait();
 }
 
-void Evebrain::speedMove(int leftDistance, float leftSpeed, int rightDistance, float rightSpeed){
-  byte rightMotorDir = rightDistance > 0 ? FORWARD : BACKWARD, leftMotorDir = leftDistance > 0 ? BACKWARD : FORWARD;
+void Evebrain::speedMove(float leftDistance, float leftSpeed, float rightDistance, float rightSpeed){
+  byte rightMotorDir = rightDistance > 0 ? FORWARD : BACKWARD, leftMotorDir = leftDistance > 0 ? FORWARD : BACKWARD;
   rightMotor.setRelSpeed(rightSpeed);
   leftMotor.setRelSpeed(leftSpeed);
   takeUpSlack(rightMotorDir, leftMotorDir);

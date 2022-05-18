@@ -110,7 +110,7 @@ class Evebrain {
     void rightMotorForward(int);
     void leftMotorBackward(int);
     void rightMotorBackward(int);
-    void speedMove(int leftDistance, float leftSpeed, int rightDistance, float rightSpeed);
+    void speedMove(float leftDistance, float leftSpeed, float rightDistance, float rightSpeed);
     void servo(int,int);
     void temperature();
     void humidity();
