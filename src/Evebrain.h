@@ -211,6 +211,8 @@ class Evebrain {
     unsigned long lastLedChange;
     Evebrain& self() { return *this; }
     void takeUpSlack(byte, byte);
+    void takeUpSlackRight(byte);
+    void takeUpSlackLeft(byte);
     void calibrateHandler();
     boolean paused;
     float steps_per_mm;

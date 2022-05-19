@@ -7,10 +7,10 @@ DHTesp dht;
 CmdProcessor cmdProcessor;
 SerialWebSocket v1ws(Serial);
 
-// To explain: This is the mapping from bits in the shift register to stepper:
+// To explain: This is the mapping from bits in the shift register to the stepper wires:
 // R L L L L R R R
 // the left motor is offset by 1 (counting from the left),
-// the right motor is offset by 5.
+// the right motor is offset by 5 and wraps around
 ShiftStepper rightMotor(5);
 ShiftStepper leftMotor(1);
 
@@ -130,7 +130,7 @@ void Evebrain::initSettings(){
     }
     // Sanity check the values to make sure they look correct
     if(settings.settingsVersion == SETTINGS_VERSION &&
-       settings.slackCalibration < 50 &&
+       settings.slackCalibration < 100 &&
        settings.moveCalibration > 0.5f &&
        settings.moveCalibration < 1.5f &&
        settings.turnCalibration > 0.5f &&
@@ -565,12 +565,24 @@ void Evebrain::_startWifiScan(ArduinoJson::JsonObject &inJson, ArduinoJson::Json
 
 void Evebrain::takeUpSlack(byte rightMotorDir, byte leftMotorDir){
   // Take up the slack on each motor
-  if(rightMotor.lastDirection != rightMotorDir){
-    rightMotor.turn(settings.slackCalibration, rightMotorDir);
-  }
+  takeUpSlackRight(rightMotorDir);
+  takeUpSlackLeft(leftMotorDir);
+}
+
+void Evebrain::takeUpSlackLeft(byte leftMotorDir) {
   if(leftMotor.lastDirection != leftMotorDir){
     leftMotor.turn(settings.slackCalibration, leftMotorDir);
   }
+  // wait until the motor is done spinning
+  while (!leftMotor.ready()) {}
+}
+
+void Evebrain::takeUpSlackRight(byte rightMotorDir) {
+  if(rightMotor.lastDirection != rightMotorDir){
+    rightMotor.turn(settings.slackCalibration, rightMotorDir);
+  }
+  // wait until the motor is done spinning
+  while (!rightMotor.ready()) {}
 }
 
 void Evebrain::forward(int distance){
@@ -860,25 +872,25 @@ void Evebrain::servo(int angle, int pin){
 }
 
 void Evebrain::leftMotorForward(int distance){
-  takeUpSlack(BACKWARD, FORWARD);
+  takeUpSlackLeft(FORWARD);
   leftMotor.turn(distance * steps_per_mm * settings.turnCalibration, FORWARD);
   wait();
 }
 
 void Evebrain::rightMotorForward(int distance){
-  takeUpSlack(FORWARD, BACKWARD);
+  takeUpSlackRight(FORWARD);
   rightMotor.turn(distance * steps_per_mm * settings.turnCalibration, FORWARD);
   wait();
 }
 
 void Evebrain::leftMotorBackward(int distance){
-  takeUpSlack(FORWARD, BACKWARD);
+  takeUpSlackLeft(BACKWARD);
   leftMotor.turn(distance * steps_per_mm * settings.turnCalibration, BACKWARD);
   wait();
 }
 
 void Evebrain::rightMotorBackward(int distance){
-  takeUpSlack(BACKWARD, FORWARD);
+  takeUpSlackRight(BACKWARD);
   rightMotor.turn(distance * steps_per_mm * settings.turnCalibration, BACKWARD);
   wait();
 }
@@ -887,12 +899,13 @@ void Evebrain::speedMove(float leftDistance, float leftSpeed, float rightDistanc
   byte rightMotorDir = rightDistance > 0 ? FORWARD : BACKWARD, leftMotorDir = leftDistance > 0 ? FORWARD : BACKWARD;
   rightMotor.setRelSpeed(rightSpeed);
   leftMotor.setRelSpeed(leftSpeed);
-  takeUpSlack(rightMotorDir, leftMotorDir);
   if (rightDistance != 0) {
+    takeUpSlackRight(rightMotorDir);
     long steps = abs(rightDistance) * steps_per_mm * settings.turnCalibration;
     rightMotor.turn(steps, rightMotorDir);
   }
   if (leftDistance != 0) {
+    takeUpSlackLeft(leftMotorDir);
     long steps = abs(leftDistance) * steps_per_mm * settings.turnCalibration;
     leftMotor.turn(steps, leftMotorDir);
   }
