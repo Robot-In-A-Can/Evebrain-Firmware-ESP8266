@@ -111,6 +111,7 @@ class Evebrain {
     void leftMotorBackward(int);
     void rightMotorBackward(int);
     void speedMove(float leftDistance, float leftSpeed, float rightDistance, float rightSpeed);
+    void speedMoveSteps(int, float, int, float);
     void servo(int,int);
     void temperature();
     void humidity();
@@ -168,6 +169,7 @@ class Evebrain {
     void _leftMotorBackward(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _rightMotorBackward(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _speedMove(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
+    void _speedMoveSteps(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _analogInput(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _readSensors(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _servo(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);

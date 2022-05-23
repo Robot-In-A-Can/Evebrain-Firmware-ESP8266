@@ -228,6 +228,7 @@ void Evebrain::initCmds(){
   cmdProcessor.addCmd("rightMotorF",      &Evebrain::_rightMotorForward,false);
   cmdProcessor.addCmd("rightMotorB",      &Evebrain::_rightMotorBackward,false);
   cmdProcessor.addCmd("speedMove",        &Evebrain::_speedMove,        false);
+  cmdProcessor.addCmd("speedMoveSteps",   &Evebrain::_speedMoveSteps,   false);
   cmdProcessor.addCmd("servo",            &Evebrain::_servo,            false);
   cmdProcessor.addCmd("servoII",          &Evebrain::_servoII,          false);
   cmdProcessor.addCmd("getConfig",        &Evebrain::_getConfig,        true);
@@ -249,8 +250,8 @@ void Evebrain::_uptime(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject 
 
 void Evebrain::_pause(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
   JsonObject& msg = outJson.createNestedObject("msg");
-  msg["leftMotorRemaining"] = ((float) leftMotor.remaining()) / steps_per_mm;
-  msg["rightMotorRemaining"] = ((float) rightMotor.remaining()) / steps_per_mm;
+  msg["leftMotorRemaining"] = leftMotor.remaining();
+  msg["rightMotorRemaining"] = rightMotor.remaining();
   
   pause();
 }
@@ -348,6 +349,40 @@ void Evebrain::_speedMove(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObje
   }
 
   speedMove(leftDistance, leftSpeed, rightDistance, rightSpeed);
+}
+
+void Evebrain::_speedMoveSteps(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson) {
+  float leftSpeed = inJson["arg"]["leftSpeed"], rightSpeed = inJson["arg"]["rightSpeed"];
+  int leftSteps = inJson["arg"]["leftSteps"], rightSteps = inJson["arg"]["rightSteps"];
+  if (leftSpeed < 0.0 || leftSpeed > 1.0) {
+    outJson["status"] = "error";
+    outJson["msg"] = "Left speed is out of range, must be within (0,1]";
+    return;
+  }
+  if (leftSpeed == 0.0 && leftSteps != 0) {
+    outJson["status"] = "error";
+    outJson["msg"] = "Left speed is out of range, cannot be 0 when moving non-zero distance.";
+    return;
+  }
+  if (rightSpeed < 0.0 || rightSpeed > 1.0) {
+    outJson["status"] = "error";
+    outJson["msg"] = "Right speed is out of range, must be within (0,1]";
+    return;
+  }
+  if (rightSpeed == 0.0 && rightSteps != 0) {
+    outJson["status"] = "error";
+    outJson["msg"] = "Right speed is out of range, cannot be 0 when moving non-zero distance.";
+    return;
+  }
+  // make sure speed is not too low.
+  if (leftSpeed < 0.1) {
+    leftSpeed = 0.1;
+  }
+  if (rightSpeed < 0.1) {
+    rightSpeed = 0.1;
+  }
+
+  speedMoveSteps(leftSteps, leftSpeed, rightSteps, rightSpeed);
 }
 
 void Evebrain::_servo(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
@@ -483,6 +518,7 @@ void Evebrain::_getConfig(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObje
   msg["wifi_mode"] = modes[EvebrainWifi::getWifiMode()];
   msg["wheelDiameter"] = settings.wheelDiameter;
   msg["wheelDistance"] = settings.wheelDistance;
+  msg["stepsPerTurn"] = STEPS_PER_TURN;
 }
 
 void Evebrain::_setConfig(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
@@ -572,17 +608,17 @@ void Evebrain::takeUpSlack(byte rightMotorDir, byte leftMotorDir){
 void Evebrain::takeUpSlackLeft(byte leftMotorDir) {
   if(leftMotor.lastDirection != leftMotorDir){
     leftMotor.turn(settings.slackCalibration, leftMotorDir);
+    // wait until the motor is done spinning
+    while (!leftMotor.ready()) {}
   }
-  // wait until the motor is done spinning
-  while (!leftMotor.ready()) {}
 }
 
 void Evebrain::takeUpSlackRight(byte rightMotorDir) {
   if(rightMotor.lastDirection != rightMotorDir){
     rightMotor.turn(settings.slackCalibration, rightMotorDir);
+    // wait until the motor is done spinning
+    while (!rightMotor.ready()) {}
   }
-  // wait until the motor is done spinning
-  while (!rightMotor.ready()) {}
 }
 
 void Evebrain::forward(int distance){
@@ -907,6 +943,22 @@ void Evebrain::speedMove(float leftDistance, float leftSpeed, float rightDistanc
   if (leftDistance != 0) {
     takeUpSlackLeft(leftMotorDir);
     long steps = abs(leftDistance) * steps_per_mm * settings.turnCalibration;
+    leftMotor.turn(steps, leftMotorDir);
+  }
+}
+
+void Evebrain::speedMoveSteps(int leftSteps, float leftSpeed, int rightSteps, float rightSpeed){
+  byte rightMotorDir = rightSteps > 0 ? FORWARD : BACKWARD, leftMotorDir = leftSteps > 0 ? FORWARD : BACKWARD;
+  rightMotor.setRelSpeed(rightSpeed);
+  leftMotor.setRelSpeed(leftSpeed);
+  if (rightSteps != 0) {
+    takeUpSlackRight(rightMotorDir);
+    long steps = abs(rightSteps) * settings.turnCalibration;
+    rightMotor.turn(steps, rightMotorDir);
+  }
+  if (leftSteps != 0) {
+    takeUpSlackLeft(leftMotorDir);
+    long steps = abs(leftSteps) * settings.turnCalibration;
     leftMotor.turn(steps, leftMotorDir);
   }
 }
