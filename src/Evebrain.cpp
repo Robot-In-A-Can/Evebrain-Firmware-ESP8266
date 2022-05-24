@@ -932,32 +932,22 @@ void Evebrain::rightMotorBackward(int distance){
 }
 
 void Evebrain::speedMove(float leftDistance, float leftSpeed, float rightDistance, float rightSpeed){
-  byte rightMotorDir = rightDistance > 0 ? FORWARD : BACKWARD, leftMotorDir = leftDistance > 0 ? FORWARD : BACKWARD;
-  rightMotor.setRelSpeed(rightSpeed);
-  leftMotor.setRelSpeed(leftSpeed);
-  if (rightDistance != 0) {
-    takeUpSlackRight(rightMotorDir);
-    long steps = abs(rightDistance) * steps_per_mm * settings.turnCalibration;
-    rightMotor.turn(steps, rightMotorDir);
-  }
-  if (leftDistance != 0) {
-    takeUpSlackLeft(leftMotorDir);
-    long steps = abs(leftDistance) * steps_per_mm * settings.turnCalibration;
-    leftMotor.turn(steps, leftMotorDir);
-  }
+  speedMoveSteps(leftDistance * steps_per_mm, leftSpeed, rightDistance * steps_per_mm, rightSpeed);
 }
 
 void Evebrain::speedMoveSteps(int leftSteps, float leftSpeed, int rightSteps, float rightSpeed){
   byte rightMotorDir = rightSteps > 0 ? FORWARD : BACKWARD, leftMotorDir = leftSteps > 0 ? FORWARD : BACKWARD;
-  rightMotor.setRelSpeed(rightSpeed);
-  leftMotor.setRelSpeed(leftSpeed);
   if (rightSteps != 0) {
     takeUpSlackRight(rightMotorDir);
+    // taking up slack resets the speed to 1.
+    rightMotor.setRelSpeed(rightSpeed);
     long steps = abs(rightSteps) * settings.turnCalibration;
     rightMotor.turn(steps, rightMotorDir);
   }
   if (leftSteps != 0) {
     takeUpSlackLeft(leftMotorDir);
+    // taking up slack resets the speed to 1.
+    leftMotor.setRelSpeed(leftSpeed);
     long steps = abs(leftSteps) * settings.turnCalibration;
     leftMotor.turn(steps, leftMotorDir);
   }
