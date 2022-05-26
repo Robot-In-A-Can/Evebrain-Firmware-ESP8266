@@ -262,16 +262,6 @@ void ShiftStepper::startTimer(){
 
 void ShiftStepper::stopTimer(){
   timer1_disable();
-  if (firstInstance && firstInstance->_remaining == 0 && firstInstance->microCounter == UCOUNTER_DEFAULT) {
-    firstInstance->stop();
-    // This ensures that all other motors will be stopped
-    // if the first one is stopped
-    ShiftStepper* next = firstInstance->nextInstance;
-    while (next != nullptr) {
-      next->stop();
-      next = next->nextInstance;
-    }
-  }
 }
 
 #endif
