@@ -2,6 +2,7 @@
 #include "Evebrain.h"
 #include "lib/DHT/DHTesp.h"
 #include "lib/Interrupts.h"
+#include "lib/GenericServo.h"
 
 DHTesp dht;
 CmdProcessor cmdProcessor;
@@ -231,6 +232,7 @@ void Evebrain::initCmds(){
   cmdProcessor.addCmd("speedMoveSteps",   &Evebrain::_speedMoveSteps,   false);
   cmdProcessor.addCmd("servo",            &Evebrain::_servo,            false);
   cmdProcessor.addCmd("servoII",          &Evebrain::_servoII,          false);
+  cmdProcessor.addCmd("genericServo",     &Evebrain::_genericServo,     true);
   cmdProcessor.addCmd("getConfig",        &Evebrain::_getConfig,        true);
   cmdProcessor.addCmd("setConfig",        &Evebrain::_setConfig,        true);
   cmdProcessor.addCmd("resetConfig",      &Evebrain::_resetConfig,      true);
@@ -391,6 +393,21 @@ void Evebrain::_servo(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &
 
 void Evebrain::_servoII(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
   servo(atoi(inJson["arg"].asString()),1);
+}
+
+void Evebrain::_genericServo(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
+  JsonVariant pin = inJson["arg"]["pin"];
+  JsonVariant angle = inJson["arg"]["angle"];
+  if (pin.is<signed char>() && angle.is<signed char>()) {
+    int success = GenericServo::startServo(angle, pin);
+    if (!success) {
+      outJson["status"] = "error";
+      outJson["msg"] = "Pin not valid for generic servo.";  
+    }
+  } else {
+    outJson["status"] = "error";
+    outJson["msg"] = "Pin or angle arguments missing for call to genericServo.";
+  }
 }
 
 void Evebrain::_beep(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
@@ -1208,6 +1225,7 @@ void Evebrain::loop()
   // connect to websocket client (if one is trying to connect) and check for incoming message
   websocketPoll();
   digitalNotifyHandler();
+  GenericServo::poll();
 
   if (settings.doPost && ready() && (millis() - previousPostTime) >= (((unsigned long)settings.serverRequestTime)*1000)) {
     postToServer();
