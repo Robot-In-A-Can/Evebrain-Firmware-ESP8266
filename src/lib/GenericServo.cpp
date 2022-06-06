@@ -6,6 +6,8 @@ bool GenericServo::pinValidForServo(int pin) {
 
 bool GenericServo::startServo(int angle, int pin) {
     int index = servoPinToIndex(pin);
+    angle = constrain(angle, 0, 180);
+
     if (index != -1) {
         pinMode(pin, OUTPUT);
         servos[index].attach(pin,500,2200);
