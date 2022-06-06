@@ -892,7 +892,6 @@ void Evebrain::servo(int angle, int pin){
   // Set up the servo
   if(pin == 0){ 
     pinMode(SERVO_PIN, OUTPUT);
-    pinMode(SERVO_PIN_TWO, INPUT);
     servo_pulses_left = abs(servoPosition - angle);
     //Serial.println(servo_pulses_left);
     next_servo_pulse = 0;
@@ -900,7 +899,6 @@ void Evebrain::servo(int angle, int pin){
     wait();
   }
   if(pin == 1){
-    pinMode(SERVO_PIN, INPUT);
     servoOne.attach(SERVO_PIN_TWO,500,2200);
     servoOne.write(angle);
     servoMove = 1;
