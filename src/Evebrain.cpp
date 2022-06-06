@@ -398,7 +398,7 @@ void Evebrain::_servoII(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject
 void Evebrain::_genericServo(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
   JsonVariant pin = inJson["arg"]["pin"];
   JsonVariant angle = inJson["arg"]["angle"];
-  if (pin.is<signed char>() && angle.is<signed char>()) {
+  if (pin.is<int>() && angle.is<int>()) {
     int success = GenericServo::startServo(angle, pin);
     if (!success) {
       outJson["status"] = "error";
