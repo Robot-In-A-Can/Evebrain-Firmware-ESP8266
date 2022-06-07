@@ -8,7 +8,6 @@ int ShiftStepper::clock_pin;
 int ShiftStepper::latch_pin;
 uint8_t ShiftStepper::lastBits;
 uint8_t ShiftStepper::currentBits;
-volatile bool ShiftStepper::timerRunning = false;
 
 ShiftStepper::ShiftStepper(int offset) {
   _remaining = 0;
@@ -246,11 +245,7 @@ void ICACHE_RAM_ATTR ShiftStepper::sendBits(){
 }
 
 void ICACHE_RAM_ATTR ShiftStepper::triggerTop(){
-  if (/*timerRunning*/ true) {
-    timer0_write(ESP.getCycleCount() + clockCyclesPerMicrosecond() * BASE_INTERRUPT_US);
-  }
-  
-
+  timer0_write(ESP.getCycleCount() + clockCyclesPerMicrosecond() * BASE_INTERRUPT_US);
   if(firstInstance){
     firstInstance->trigger();
   }
@@ -259,14 +254,13 @@ void ICACHE_RAM_ATTR ShiftStepper::triggerTop(){
 
 void ShiftStepper::startTimer(){
   // Initialise the timer
-  timerRunning = true;
   timer0_isr_init();
   timer0_attachInterrupt(ShiftStepper::triggerTop);
   timer0_write(ESP.getCycleCount() + clockCyclesPerMicrosecond() * BASE_INTERRUPT_US);
 }
 
 void ShiftStepper::stopTimer(){
-  timerRunning = false;
+  // no-op since not stopping the timer
 }
 
 #endif

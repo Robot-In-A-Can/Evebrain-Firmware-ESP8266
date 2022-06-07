@@ -13,7 +13,6 @@
 
 class ShiftStepper {
   public:
-  volatile static bool timerRunning;
     ShiftStepper(int);
     static void setup(int, int, int);
     void instanceSetup();
