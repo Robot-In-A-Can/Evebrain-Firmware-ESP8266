@@ -396,17 +396,17 @@ void Evebrain::_servoII(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject
 }
 
 void Evebrain::_genericServo(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
-  JsonVariant pin = inJson["arg"]["pin"];
-  JsonVariant angle = inJson["arg"]["angle"];
-  if (pin.is<int>() && angle.is<int>()) {
-    int success = GenericServo::startServo(angle, pin);
+  const char* pin = inJson["arg"]["pin"].asString();
+  const char* angle = inJson["arg"]["angle"].asString();
+  if (pin && angle) {
+    int success = GenericServo::startServo(atoi(angle), atoi(pin));
     if (!success) {
       outJson["status"] = "error";
       outJson["msg"] = "Pin not valid for generic servo.";  
     }
   } else {
     outJson["status"] = "error";
-    outJson["msg"] = "Pin or angle arguments missing for call to genericServo.";
+    outJson["msg"] = "Missing pin or angle argument for genericServo command";  
   }
 }
 
