@@ -21,7 +21,7 @@ class ShiftStepper {
     static boolean allStopped();
     long remaining();
     void release();
-    static void triggerTop();
+    static uint32_t triggerTop();
     void pause();
     void resume();
     void stop();
@@ -65,8 +65,10 @@ class ShiftStepper {
     void updateBits(uint8_t bits);
     static void sendBits();
     static void startTimer();
-    //volatile static bool timerRunning;
     static void stopTimer();
+    // These are used for the timer callback. See ShiftStepper::triggerTop in the cpp file.
+    static uint32_t lastTrigger;
+    static const uint32_t cyclesBetweenTrigger = clockCyclesPerMicrosecond() * BASE_INTERRUPT_US;
 };
 
 #endif

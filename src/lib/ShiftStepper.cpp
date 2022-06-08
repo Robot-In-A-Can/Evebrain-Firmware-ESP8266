@@ -1,6 +1,7 @@
 #ifdef ESP8266
 #include "Arduino.h"
 #include "ShiftStepper.h"
+#include "core_esp8266_waveform.h"
 
 ShiftStepper *ShiftStepper::firstInstance;
 int ShiftStepper::data_pin;
@@ -8,6 +9,8 @@ int ShiftStepper::clock_pin;
 int ShiftStepper::latch_pin;
 uint8_t ShiftStepper::lastBits;
 uint8_t ShiftStepper::currentBits;
+
+uint32_t ShiftStepper::lastTrigger = 0;
 
 ShiftStepper::ShiftStepper(int offset) {
   _remaining = 0;
@@ -244,23 +247,26 @@ void ICACHE_RAM_ATTR ShiftStepper::sendBits(){
   }
 }
 
-void ICACHE_RAM_ATTR ShiftStepper::triggerTop(){
-  timer0_write(ESP.getCycleCount() + clockCyclesPerMicrosecond() * BASE_INTERRUPT_US);
-  if(firstInstance){
-    firstInstance->trigger();
+uint32_t ICACHE_RAM_ATTR ShiftStepper::triggerTop(){
+  // because of the way setTimer1Callback works, need to make sure actually need to trigger 
+  if (ESP.getCycleCount() < lastTrigger || ESP.getCycleCount() - lastTrigger >= cyclesBetweenTrigger) {
+    lastTrigger = ESP.getCycleCount();
+    if(firstInstance){
+      firstInstance->trigger();
+    }
+    sendBits();
   }
-  sendBits();
+  return cyclesBetweenTrigger;
 }
 
 void ShiftStepper::startTimer(){
-  // Initialise the timer
-  timer0_isr_init();
-  timer0_attachInterrupt(ShiftStepper::triggerTop);
-  timer0_write(ESP.getCycleCount() + clockCyclesPerMicrosecond() * BASE_INTERRUPT_US);
+  // Initialise the timer with this callback, using the waveform library.
+  setTimer1Callback(ShiftStepper::triggerTop);
 }
 
 void ShiftStepper::stopTimer(){
-  // no-op since not stopping the timer
+  // Stop the callback, using the waveform library.
+  setTimer1Callback(NULL);
 }
 
 #endif
