@@ -1,7 +1,7 @@
 #ifndef GENERIC_SERVO_H
 #define GENERIC_SERVO_H
 
-#define NUMBER_OF_SERVO_PINS 6
+#define NUMBER_OF_SERVO_PINS 8
 
 #include <Servo.h>
 class GenericServo

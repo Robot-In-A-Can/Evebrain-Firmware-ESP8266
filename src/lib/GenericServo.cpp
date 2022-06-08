@@ -37,6 +37,6 @@ int GenericServo::servoPinToIndex(int pin) {
     return -1;
 }
 
-int GenericServo::validPins[NUMBER_OF_SERVO_PINS] = {4, 5, 16, 14, 12, 13};
-Servo GenericServo::servos[NUMBER_OF_SERVO_PINS] = {Servo(), Servo(), Servo(), Servo(), Servo(), Servo()};
+int GenericServo::validPins[NUMBER_OF_SERVO_PINS] = {0, 2, 4, 5, 16, 14, 12, 13};
+Servo GenericServo::servos[NUMBER_OF_SERVO_PINS] = {Servo(), Servo(), Servo(), Servo(), Servo(), Servo(), Servo(), Servo()};
 unsigned long GenericServo::timesStarted[NUMBER_OF_SERVO_PINS] = {0};

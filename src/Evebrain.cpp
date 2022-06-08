@@ -1080,6 +1080,10 @@ void Evebrain::servoHandler(){
       delayMicroseconds((((servoPosition%181)/90)+0.5)*1000);
       digitalWrite(SERVO_PIN, LOW);
       next_servo_pulse = micros() + (12000 - (((servoPosition%181)/90)+0.5)*1000);
+      // if now done, pull pin 10 HIGH as a precaution
+      if (servo_pulses_left == 0) {
+        digitalWrite(SERVO_PIN, HIGH);
+      }
     }
   }
 }
