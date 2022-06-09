@@ -64,7 +64,6 @@ Evebrain::Evebrain(){
   buzzerBeep = 0;
   wifiEnabled = false;
 }
-
 void Evebrain::begin(unsigned char v){
   version(v);
 

@@ -36,7 +36,7 @@ private:
 };
 
 #define MAKE_ISR_FOR_PIN(X, NOTIFYSTACK)                         \
-  ICACHE_RAM_ATTR void pin##X##ISR()                             \
+  IRAM_ATTR void pin##X##ISR()                                   \
   {                                                              \
     int pinValue = digitalRead((X));                             \
     (NOTIFYSTACK).push(PinState((X), pinValue == HIGH ? 1 : 0)); \

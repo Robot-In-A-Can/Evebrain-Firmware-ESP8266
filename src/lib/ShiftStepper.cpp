@@ -87,11 +87,11 @@ void ShiftStepper::turn(long steps, byte direction){
   startTimer();
 }
 
-boolean ShiftStepper::ready(){
+boolean IRAM_ATTR ShiftStepper::ready(){
   return (_remaining == 0  && _remainingCyclesToSlowdown == 0);
 }
 
-boolean ShiftStepper::allStopped() {
+boolean IRAM_ATTR ShiftStepper::allStopped() {
   if (!firstInstance) {
     return true;
   }
@@ -120,7 +120,7 @@ void ShiftStepper::setRelSpeed(float multiplier) {
   }
 }
 
-byte ICACHE_RAM_ATTR ShiftStepper::nextStep(){
+byte IRAM_ATTR ShiftStepper::nextStep(){
   switch(currentStep){
     case B0000:
     case B0001:
@@ -144,7 +144,7 @@ byte ICACHE_RAM_ATTR ShiftStepper::nextStep(){
   }
 }
 
-void ICACHE_RAM_ATTR ShiftStepper::setNextStepSlowdown() {
+void IRAM_ATTR ShiftStepper::setNextStepSlowdown() {
   if (_remainingInBatch > 0) {
     // if in a batch, proceed as normal
     if(_remaining > 0 && !_paused){
@@ -168,7 +168,7 @@ void ICACHE_RAM_ATTR ShiftStepper::setNextStepSlowdown() {
     }
   } else {
     // if done moving
-    setRelSpeed(1.0);
+    cyclesToWait = 0; // set relative speed back to 1.
     if (allStopped()) {
         release();
         stopTimer();
@@ -176,7 +176,7 @@ void ICACHE_RAM_ATTR ShiftStepper::setNextStepSlowdown() {
   }
 }
 
-void ICACHE_RAM_ATTR ShiftStepper::setNextStepFullspeed() {
+void IRAM_ATTR ShiftStepper::setNextStepFullspeed() {
   if(_remaining > 0 && !_paused){
       if(!--microCounter){
         microCounter = UCOUNTER_DEFAULT;
@@ -184,7 +184,7 @@ void ICACHE_RAM_ATTR ShiftStepper::setNextStepFullspeed() {
         updateBits(nextStep());
       }
     }else{
-      setRelSpeed(1.0); // makes sure that speed is normal on next move.
+      cyclesToWait = 0; // Set relative speed back to 1.
       if (allStopped()) {
         release();
         stopTimer();
@@ -192,7 +192,7 @@ void ICACHE_RAM_ATTR ShiftStepper::setNextStepFullspeed() {
   }
 }
 
-void ICACHE_RAM_ATTR ShiftStepper::setNextStep(){
+void IRAM_ATTR ShiftStepper::setNextStep(){
   if (cyclesToWait > 0) { // if we are running slower than normal
     setNextStepSlowdown();
   } else {
@@ -200,13 +200,13 @@ void ICACHE_RAM_ATTR ShiftStepper::setNextStep(){
   }
 }
 
-void ICACHE_RAM_ATTR ShiftStepper::release(){
+void IRAM_ATTR ShiftStepper::release(){
   currentStep = 0;
   updateBits(0);
   sendBits();
 }
 
-void ICACHE_RAM_ATTR ShiftStepper::trigger(){
+void IRAM_ATTR ShiftStepper::trigger(){
   setNextStep();
   if(nextInstance){
     nextInstance->trigger();
@@ -215,16 +215,15 @@ void ICACHE_RAM_ATTR ShiftStepper::trigger(){
 
 /**
  * @brief Takes a byte, shifts it by a certain number of places,
- * while wrapping around the bits that would normally fall off
+ * while wrapping around the bits that would normally fall off.
+ * Defined this way, since the ebrain seems to be running out of iram for isr functions.
  * @param in Byte to process
  * @param amountToShift Amount of places to shift (tested for positive only)
  * @return byte The input byte, shifted.
  */
-byte shiftWraparound(byte in, int amountToShift) {
-  return in << amountToShift | in >> (8 - amountToShift);
-}
+#define shiftWraparound(in, amountToShift)  in << amountToShift | in >> (8 - amountToShift)
 
-void ICACHE_RAM_ATTR ShiftStepper::updateBits(uint8_t bits){
+void IRAM_ATTR ShiftStepper::updateBits(uint8_t bits){
   currentStep = bits;
   // clear upper 4 bits of 'bits'
   bits &= B1111;
@@ -236,7 +235,7 @@ void ICACHE_RAM_ATTR ShiftStepper::updateBits(uint8_t bits){
   currentBits |= bits;
 }
 
-void ICACHE_RAM_ATTR ShiftStepper::sendBits(){
+void IRAM_ATTR ShiftStepper::sendBits(){
   if(currentBits != lastBits){
     lastBits = currentBits;
     shiftOut(data_pin, clock_pin, MSBFIRST, currentBits);
@@ -247,8 +246,9 @@ void ICACHE_RAM_ATTR ShiftStepper::sendBits(){
   }
 }
 
-uint32_t ICACHE_RAM_ATTR ShiftStepper::triggerTop(){
-  // because of the way setTimer1Callback works, need to make sure actually need to trigger 
+uint32_t IRAM_ATTR ShiftStepper::triggerTop(){
+  // because of the way setTimer1Callback works, need to make sure enough time has
+  // passed that this actually needs to trigger
   if (ESP.getCycleCount() < lastTrigger || ESP.getCycleCount() - lastTrigger >= cyclesBetweenTrigger) {
     lastTrigger = ESP.getCycleCount();
     if(firstInstance){
@@ -262,9 +262,10 @@ uint32_t ICACHE_RAM_ATTR ShiftStepper::triggerTop(){
 void ShiftStepper::startTimer(){
   // Initialise the timer with this callback, using the waveform library.
   setTimer1Callback(ShiftStepper::triggerTop);
+  lastTrigger = ESP.getCycleCount();
 }
 
-void ShiftStepper::stopTimer(){
+void IRAM_ATTR ShiftStepper::stopTimer(){
   // Stop the callback, using the waveform library.
   setTimer1Callback(NULL);
 }
