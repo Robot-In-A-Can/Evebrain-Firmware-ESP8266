@@ -188,7 +188,7 @@ void Evebrain::hmc5883l_init(){   /* Magneto initialize function */
   Wire.endTransmission();
 }
 
-void Evebrain::initCmds(){
+void ICACHE_FLASH_ATTR Evebrain::initCmds(){
   cmdProcessor.setEvebrain(self());
   //             Command name        Handler function             // Returns immediately
   cmdProcessor.addCmd("version",          &Evebrain::_version,          true);
@@ -437,7 +437,7 @@ void Evebrain::_compassSensor(ArduinoJson::JsonObject &inJson, ArduinoJson::Json
   compassSensor();
 }
 
-void Evebrain::_postToServer(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
+void ICACHE_FLASH_ATTR Evebrain::_postToServer(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
   if(!(inJson.containsKey("arg") && inJson["arg"].is<JsonObject&>())) return;
 
   // Set doPost byte if eBrain will post in intervals or just once
@@ -683,7 +683,7 @@ void Evebrain::stop(){
   calibratingSlack = false;
 }
 
-void Evebrain::beep(int semi_tone, int duration){
+void ICACHE_FLASH_ATTR Evebrain::beep(int semi_tone, int duration){
   if (semi_tone>=0 && semi_tone<=88){
     tone(SPEAKER_PIN, frequencyHZ[semi_tone]);
   }
@@ -811,7 +811,7 @@ void Evebrain::gpio_pwm(byte pin, byte value){
   analogWrite(pin, value);
 }
 
-void Evebrain::receiveFromServer() {
+void ICACHE_FLASH_ATTR Evebrain::receiveFromServer() {
   client.setInsecure();
   char getlink[100];
   strcpy(getlink,settings.hostServer);
@@ -844,7 +844,7 @@ void Evebrain::receiveFromServer() {
   }
 }
 
-void Evebrain::postMsgToServer(char * msg){
+void ICACHE_FLASH_ATTR Evebrain::postMsgToServer(char * msg){
   client.setInsecure();
   if (http.begin(client, settings.hostServer)) {
     http.addHeader("Content-Type", "application/json");
@@ -856,7 +856,7 @@ void Evebrain::postMsgToServer(char * msg){
 
 
 
-void Evebrain::postToServer(){
+void ICACHE_FLASH_ATTR Evebrain::postToServer(){
   int analog = analogRead(0);
   int pins[10] = {4,5,10,16,14,12,13,0,2};
   char pinState[10];

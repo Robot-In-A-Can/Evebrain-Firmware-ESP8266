@@ -6,6 +6,7 @@
 // Define the list of pins we can add an interrupt handler on
 #define INTERRUPTABLE_PINS X(4) X(14) X(12) X(13) X(0) X(2)
 
+
 class PinState {
     public:
     PinState(unsigned char pin, unsigned char pinState);
@@ -36,7 +37,7 @@ private:
 };
 
 #define MAKE_ISR_FOR_PIN(X, NOTIFYSTACK)                         \
-  IRAM_ATTR void pin##X##ISR()                                   \
+  ICACHE_RAM_ATTR void pin##X##ISR()                             \
   {                                                              \
     int pinValue = digitalRead((X));                             \
     (NOTIFYSTACK).push(PinState((X), pinValue == HIGH ? 1 : 0)); \
