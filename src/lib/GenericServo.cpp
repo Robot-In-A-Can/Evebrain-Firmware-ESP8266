@@ -24,7 +24,7 @@ void ManualServo::stop() {
 void ManualServo::poll() {
     if(running){
         if(micros() >= nextServoPulse){
-            int highTime = map(angle, 0, 180, 600, 2400);
+            int highTime = map(angle, 0, 180, 500, 2500);
             digitalWrite(pin, HIGH);
             delayMicroseconds(highTime);
             digitalWrite(pin, LOW);
