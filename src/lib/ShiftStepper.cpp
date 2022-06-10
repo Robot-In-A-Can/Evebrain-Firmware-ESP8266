@@ -1,7 +1,6 @@
 #ifdef ESP8266
 #include "Arduino.h"
 #include "ShiftStepper.h"
-#include "core_esp8266_waveform.h"
 
 ShiftStepper *ShiftStepper::firstInstance;
 int ShiftStepper::data_pin;
@@ -9,8 +8,6 @@ int ShiftStepper::clock_pin;
 int ShiftStepper::latch_pin;
 uint8_t ShiftStepper::lastBits;
 uint8_t ShiftStepper::currentBits;
-
-uint32_t ShiftStepper::lastTrigger = 0;
 
 ShiftStepper::ShiftStepper(int offset) {
   _remaining = 0;
@@ -87,11 +84,11 @@ void ShiftStepper::turn(long steps, byte direction){
   startTimer();
 }
 
-boolean ICACHE_RAM_ATTR ShiftStepper::ready(){
+boolean ShiftStepper::ready(){
   return (_remaining == 0  && _remainingCyclesToSlowdown == 0);
 }
 
-boolean ICACHE_RAM_ATTR ShiftStepper::allStopped() {
+boolean ShiftStepper::allStopped() {
   if (!firstInstance) {
     return true;
   }
@@ -168,7 +165,7 @@ void ICACHE_RAM_ATTR ShiftStepper::setNextStepSlowdown() {
     }
   } else {
     // if done moving
-    cyclesToWait = 0; // set relative speed back to 1.
+    setRelSpeed(1.0);
     if (allStopped()) {
         release();
         stopTimer();
@@ -184,7 +181,7 @@ void ICACHE_RAM_ATTR ShiftStepper::setNextStepFullspeed() {
         updateBits(nextStep());
       }
     }else{
-      cyclesToWait = 0; // Set relative speed back to 1.
+      setRelSpeed(1.0); // makes sure that speed is normal on next move.
       if (allStopped()) {
         release();
         stopTimer();
@@ -215,13 +212,14 @@ void ICACHE_RAM_ATTR ShiftStepper::trigger(){
 
 /**
  * @brief Takes a byte, shifts it by a certain number of places,
- * while wrapping around the bits that would normally fall off.
- * Defined this way, since the ebrain seems to be running out of iram for isr functions.
+ * while wrapping around the bits that would normally fall off
  * @param in Byte to process
  * @param amountToShift Amount of places to shift (tested for positive only)
  * @return byte The input byte, shifted.
  */
-#define shiftWraparound(in, amountToShift)  in << amountToShift | in >> (8 - amountToShift)
+byte shiftWraparound(byte in, int amountToShift) {
+  return in << amountToShift | in >> (8 - amountToShift);
+}
 
 void ICACHE_RAM_ATTR ShiftStepper::updateBits(uint8_t bits){
   currentStep = bits;
@@ -246,28 +244,24 @@ void ICACHE_RAM_ATTR ShiftStepper::sendBits(){
   }
 }
 
-uint32_t ICACHE_RAM_ATTR ShiftStepper::triggerTop(){
-  // because of the way setTimer1Callback works, need to make sure enough time has
-  // passed that this actually needs to trigger
-  if (ESP.getCycleCount() < lastTrigger || ESP.getCycleCount() - lastTrigger >= cyclesBetweenTrigger) {
-    lastTrigger = ESP.getCycleCount();
-    if(firstInstance){
-      firstInstance->trigger();
-    }
-    sendBits();
+void ICACHE_RAM_ATTR ShiftStepper::triggerTop(){
+  if(firstInstance){
+    firstInstance->trigger();
   }
-  return cyclesBetweenTrigger;
+  sendBits();
 }
 
 void ShiftStepper::startTimer(){
-  // Initialise the timer with this callback, using the waveform library.
-  setTimer1Callback(ShiftStepper::triggerTop);
-  lastTrigger = ESP.getCycleCount();
+  // Initialise the timers
+  timer1_disable();
+  timer1_isr_init();
+  timer1_attachInterrupt(ShiftStepper::triggerTop);
+  timer1_enable(TIM_DIV1, TIM_EDGE, TIM_LOOP);
+  timer1_write(clockCyclesPerMicrosecond() * BASE_INTERRUPT_US);
 }
 
-void ICACHE_RAM_ATTR ShiftStepper::stopTimer(){
-  // Stop the callback, using the waveform library.
-  setTimer1Callback(NULL);
+void ShiftStepper::stopTimer(){
+  timer1_disable();
 }
 
 #endif

@@ -1,22 +1,53 @@
 #include "GenericServo.h"
+#include "Arduino.h"
+
+ManualServo::ManualServo():pin(-1), angle(0), running(false), nextServoPulse(0) {
+
+}
+
+void ManualServo::start(int pin, int angle) {
+    this->pin = pin;
+    this->angle = angle;
+    running = true;
+    nextServoPulse = micros();
+}
+
+void ManualServo::stop() {
+    running = false;
+    if (pin == 10) {
+        // now done (running for more than the 1000ms)
+        // set the servo to stop, and pull pin 10 HIGH as a precaution
+        digitalWrite(10, HIGH);
+    }
+}
+
+void ManualServo::poll() {
+    if(running){
+        if(micros() >= nextServoPulse){
+            int highTime = map(angle, 0, 180, 600, 2400);
+            digitalWrite(pin, HIGH);
+            delayMicroseconds(highTime);
+            digitalWrite(pin, LOW);
+            nextServoPulse = micros() + (12000 - highTime);
+        }
+    }
+}
+
+bool ManualServo::isRunning() {
+    return running;
+}
 
 bool GenericServo::pinValidForServo(int pin) {
-    return pin == 10 || servoPinToIndex(pin) != -1;
+    return servoPinToIndex(pin) != -1;
 }
 
 bool GenericServo::startServo(int angle, int pin) {
     angle = constrain(angle, 0, 180);
 
-    if (pin == 10) {
-        startServo10(angle);
-        return true;
-    }
-
     int index = servoPinToIndex(pin);
     if (index != -1) {
         pinMode(pin, OUTPUT);
-        servos[index].attach(pin,500,2500);
-        servos[index].write(angle);
+        servos[index].start(pin, angle);
         timesStarted[index] = millis();
         return true;
     } else {
@@ -26,36 +57,11 @@ bool GenericServo::startServo(int angle, int pin) {
 
 void GenericServo::poll() {
     for (int i = 0; i < NUMBER_OF_SERVO_PINS; i++) {
-        if (servos[i].attached() &&
+        servos[i].poll();
+        if (servos[i].isRunning() &&
             millis() - timesStarted[i] >= MILLIS_BEFORE_STOP) {
-            servos[i].detach();
+            servos[i].stop();
         }
-    }
-    pollServo10();
-}
-
-void GenericServo::startServo10(int angle) {
-    pinMode(10, OUTPUT);
-    servoTimeStarted = millis();
-    nextServoPulse = 0;
-    servoPosition = angle;
-    servoRunning = true;
-}
-
-void GenericServo::pollServo10() {
-    if(millis() - servoTimeStarted <= MILLIS_BEFORE_STOP){
-        if(micros() >= nextServoPulse){
-            digitalWrite(10, HIGH);
-            int highTime = map(servoPosition, 0, 180, 500, 2500);
-            delayMicroseconds(highTime);
-            digitalWrite(10, LOW);
-            nextServoPulse = micros() + (12000 - highTime);
-        }
-    } else if (servoRunning) {
-        // now done (running for more than the 1000ms)
-        // set the servo to stop, and pull pin 10 HIGH as a precaution
-        digitalWrite(10, HIGH);
-        servoRunning = false;
     }
 }
 
@@ -68,10 +74,7 @@ int GenericServo::servoPinToIndex(int pin) {
     return -1;
 }
 
-int GenericServo::validPins[NUMBER_OF_SERVO_PINS] = {0, 2, 4, 5, 16, 14, 12, 13};
-Servo GenericServo::servos[NUMBER_OF_SERVO_PINS] = {Servo(), Servo(), Servo(), Servo(), Servo(), Servo(), Servo(), Servo()};
+int GenericServo::validPins[NUMBER_OF_SERVO_PINS] = {0, 2, 4, 5, 10, 16, 14, 12, 13};
+ManualServo GenericServo::servos[NUMBER_OF_SERVO_PINS] = {ManualServo(), ManualServo(), ManualServo(), ManualServo(),
+                                                    ManualServo(), ManualServo(), ManualServo(), ManualServo(), ManualServo()};
 unsigned long GenericServo::timesStarted[NUMBER_OF_SERVO_PINS] = {0};
-int GenericServo::servoTimeStarted = 0;
-int GenericServo::nextServoPulse = 0;
-int GenericServo::servoPosition = 0;
-bool GenericServo::servoRunning = false;

@@ -1214,14 +1214,17 @@ unsigned long previousPostTime = 0;
 
 void Evebrain::loop()
 {
+  GenericServo::poll();
   ledHandler();
   servoHandler();
   calibrateHandler();
+  GenericServo::poll();
   networkNotifier();
   wifiScanNotifier();
   if(wifiEnabled){
     wifi.run();
   }
+  GenericServo::poll();
   serialHandler();
   checkReady();
   ota.runOTA();

@@ -2,9 +2,22 @@
 #define GENERIC_SERVO_H
 
 // The number of servos that can be driven 'normally'
-#define NUMBER_OF_SERVO_PINS 8
+#define NUMBER_OF_SERVO_PINS 9
 
-#include <Servo.h>
+class ManualServo {
+public:
+    ManualServo();
+    void start(int pin, int angle);
+    void stop();
+    void poll();
+    bool isRunning();
+private:
+    unsigned long nextServoPulse;
+    int angle;
+    int pin;
+    bool running;
+};
+
 class GenericServo
 {
 public:
@@ -18,17 +31,11 @@ public:
 
 private:
     static int servoPinToIndex(int pin);
-    static void startServo10(int angle);
-    static void pollServo10();
-    // These members are all for the 8 pins that can be driven normally
+    // These members are all for the 9 pins that can be driven
     static int validPins[NUMBER_OF_SERVO_PINS];
-    static Servo servos[NUMBER_OF_SERVO_PINS];
+    static ManualServo servos[NUMBER_OF_SERVO_PINS];
     static unsigned long timesStarted[NUMBER_OF_SERVO_PINS];
     static const int MILLIS_BEFORE_STOP = 1000;
-    // These members are for pin 10, which is manually driven.
-    static int servoTimeStarted, nextServoPulse;
-    static int servoPosition;
-    static bool servoRunning;
 };
 
 #endif
