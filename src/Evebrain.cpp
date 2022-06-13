@@ -2,6 +2,7 @@
 #include "Evebrain.h"
 #include "lib/DHT/DHTesp.h"
 #include "lib/Interrupts.h"
+#include "lib/PinServos.h"
 
 DHTesp dht;
 CmdProcessor cmdProcessor;
@@ -63,7 +64,6 @@ Evebrain::Evebrain(){
   buzzerBeep = 0;
   wifiEnabled = false;
 }
-
 void Evebrain::begin(unsigned char v){
   version(v);
 
@@ -188,7 +188,7 @@ void Evebrain::hmc5883l_init(){   /* Magneto initialize function */
   Wire.endTransmission();
 }
 
-void Evebrain::initCmds(){
+void ICACHE_FLASH_ATTR Evebrain::initCmds(){
   cmdProcessor.setEvebrain(self());
   //             Command name        Handler function             // Returns immediately
   cmdProcessor.addCmd("version",          &Evebrain::_version,          true);
@@ -231,6 +231,7 @@ void Evebrain::initCmds(){
   cmdProcessor.addCmd("speedMoveSteps",   &Evebrain::_speedMoveSteps,   false);
   cmdProcessor.addCmd("servo",            &Evebrain::_servo,            false);
   cmdProcessor.addCmd("servoII",          &Evebrain::_servoII,          false);
+  cmdProcessor.addCmd("pinServo",         &Evebrain::_pinServo,          true);
   cmdProcessor.addCmd("getConfig",        &Evebrain::_getConfig,        true);
   cmdProcessor.addCmd("setConfig",        &Evebrain::_setConfig,        true);
   cmdProcessor.addCmd("resetConfig",      &Evebrain::_resetConfig,      true);
@@ -393,6 +394,21 @@ void Evebrain::_servoII(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject
   servo(atoi(inJson["arg"].asString()),1);
 }
 
+void Evebrain::_pinServo(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
+  const char* pin = inJson["arg"]["pin"].asString();
+  const char* angle = inJson["arg"]["angle"].asString();
+  if (pin && angle) {
+    int success = PinServos::startServo(atoi(angle), atoi(pin));
+    if (!success) {
+      outJson["status"] = "error";
+      outJson["msg"] = "Pin not valid for generic servo.";  
+    }
+  } else {
+    outJson["status"] = "error";
+    outJson["msg"] = "Missing pin or angle argument for genericServo command";  
+  }
+}
+
 void Evebrain::_beep(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
   char s[16];
   strcpy(s, inJson["arg"].asString());
@@ -421,7 +437,7 @@ void Evebrain::_compassSensor(ArduinoJson::JsonObject &inJson, ArduinoJson::Json
   compassSensor();
 }
 
-void Evebrain::_postToServer(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
+void ICACHE_FLASH_ATTR Evebrain::_postToServer(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
   if(!(inJson.containsKey("arg") && inJson["arg"].is<JsonObject&>())) return;
 
   // Set doPost byte if eBrain will post in intervals or just once
@@ -667,7 +683,7 @@ void Evebrain::stop(){
   calibratingSlack = false;
 }
 
-void Evebrain::beep(int semi_tone, int duration){
+void ICACHE_FLASH_ATTR Evebrain::beep(int semi_tone, int duration){
   if (semi_tone>=0 && semi_tone<=88){
     tone(SPEAKER_PIN, frequencyHZ[semi_tone]);
   }
@@ -795,7 +811,7 @@ void Evebrain::gpio_pwm(byte pin, byte value){
   analogWrite(pin, value);
 }
 
-void Evebrain::receiveFromServer() {
+void ICACHE_FLASH_ATTR Evebrain::receiveFromServer() {
   client.setInsecure();
   char getlink[100];
   strcpy(getlink,settings.hostServer);
@@ -828,7 +844,7 @@ void Evebrain::receiveFromServer() {
   }
 }
 
-void Evebrain::postMsgToServer(char * msg){
+void ICACHE_FLASH_ATTR Evebrain::postMsgToServer(char * msg){
   client.setInsecure();
   if (http.begin(client, settings.hostServer)) {
     http.addHeader("Content-Type", "application/json");
@@ -840,7 +856,7 @@ void Evebrain::postMsgToServer(char * msg){
 
 
 
-void Evebrain::postToServer(){
+void ICACHE_FLASH_ATTR Evebrain::postToServer(){
   int analog = analogRead(0);
   int pins[10] = {4,5,10,16,14,12,13,0,2};
   char pinState[10];
@@ -1063,6 +1079,10 @@ void Evebrain::servoHandler(){
       delayMicroseconds((((servoPosition%181)/90)+0.5)*1000);
       digitalWrite(SERVO_PIN, LOW);
       next_servo_pulse = micros() + (12000 - (((servoPosition%181)/90)+0.5)*1000);
+      // if now done, pull pin 10 HIGH as a precaution
+      if (servo_pulses_left == 0) {
+        digitalWrite(SERVO_PIN, HIGH);
+      }
     }
   }
 }
@@ -1202,12 +1222,14 @@ void Evebrain::loop()
   if(wifiEnabled){
     wifi.run();
   }
+  PinServos::poll();
   serialHandler();
   checkReady();
   ota.runOTA();
   // connect to websocket client (if one is trying to connect) and check for incoming message
   websocketPoll();
   digitalNotifyHandler();
+  PinServos::poll();
 
   if (settings.doPost && ready() && (millis() - previousPostTime) >= (((unsigned long)settings.serverRequestTime)*1000)) {
     postToServer();

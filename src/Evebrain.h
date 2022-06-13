@@ -174,6 +174,7 @@ class Evebrain {
     void _readSensors(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _servo(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _servoII(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
+    void _pinServo(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _temperature(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _humidity(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _digitalInput(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
