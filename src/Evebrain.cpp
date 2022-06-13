@@ -2,15 +2,16 @@
 #include "Evebrain.h"
 #include "lib/DHT/DHTesp.h"
 #include "lib/Interrupts.h"
+#include "lib/PinServos.h"
 
 DHTesp dht;
 CmdProcessor cmdProcessor;
 SerialWebSocket v1ws(Serial);
 
-// To explain: This is the mapping from bit in the shift register to stepper:
+// To explain: This is the mapping from bits in the shift register to the stepper wires:
 // R L L L L R R R
 // the left motor is offset by 1 (counting from the left),
-// the right motor is offset by 5.
+// the right motor is offset by 5 and wraps around
 ShiftStepper rightMotor(5);
 ShiftStepper leftMotor(1);
 
@@ -63,7 +64,6 @@ Evebrain::Evebrain(){
   buzzerBeep = 0;
   wifiEnabled = false;
 }
-
 void Evebrain::begin(unsigned char v){
   version(v);
 
@@ -117,6 +117,11 @@ void Evebrain::enableWifi(){
   wifiEnabled = true;
 }
 
+void Evebrain::calculateForWheels() {
+  steps_per_mm = STEPS_PER_TURN / (PI * settings.wheelDiameter);
+  steps_per_degree = ((settings.wheelDistance * PI) / 360) * steps_per_mm;
+}
+
 void Evebrain::initSettings(){
   if(EEPROM.read(EEPROM_OFFSET) == MAGIC_BYTE_1 && EEPROM.read(EEPROM_OFFSET + 1) == MAGIC_BYTE_2 && EEPROM.read(EEPROM_OFFSET + 2) == SETTINGS_VERSION){
     // We've previously written something valid to the EEPROM
@@ -125,13 +130,14 @@ void Evebrain::initSettings(){
     }
     // Sanity check the values to make sure they look correct
     if(settings.settingsVersion == SETTINGS_VERSION &&
-       settings.slackCalibration < 50 &&
+       settings.slackCalibration < 100 &&
        settings.moveCalibration > 0.5f &&
        settings.moveCalibration < 1.5f &&
        settings.turnCalibration > 0.5f &&
        settings.turnCalibration < 1.5f){
       // The values look OK so let's leave them as they are
       if (digitalRead(RESET) == 0) {
+        calculateForWheels();
         return;
       }
     }
@@ -141,6 +147,9 @@ void Evebrain::initSettings(){
   settings.slackCalibration = 14;
   settings.moveCalibration = 1.0f;
   settings.turnCalibration = 1.0f;
+  settings.wheelDiameter = DEFAULT_DIAMETER_MM_V2;
+  settings.wheelDistance = DEFAULT_WHEEL_DISTANCE_V2;
+  calculateForWheels();
   settings.sta_ssid[0] = 0;
   settings.sta_pass[0] = 0;
   settings.sta_dhcp = true;
@@ -179,7 +188,7 @@ void Evebrain::hmc5883l_init(){   /* Magneto initialize function */
   Wire.endTransmission();
 }
 
-void Evebrain::initCmds(){
+void ICACHE_FLASH_ATTR Evebrain::initCmds(){
   cmdProcessor.setEvebrain(self());
   //             Command name        Handler function             // Returns immediately
   cmdProcessor.addCmd("version",          &Evebrain::_version,          true);
@@ -219,8 +228,10 @@ void Evebrain::initCmds(){
   cmdProcessor.addCmd("rightMotorF",      &Evebrain::_rightMotorForward,false);
   cmdProcessor.addCmd("rightMotorB",      &Evebrain::_rightMotorBackward,false);
   cmdProcessor.addCmd("speedMove",        &Evebrain::_speedMove,        false);
+  cmdProcessor.addCmd("speedMoveSteps",   &Evebrain::_speedMoveSteps,   false);
   cmdProcessor.addCmd("servo",            &Evebrain::_servo,            false);
   cmdProcessor.addCmd("servoII",          &Evebrain::_servoII,          false);
+  cmdProcessor.addCmd("pinServo",         &Evebrain::_pinServo,          true);
   cmdProcessor.addCmd("getConfig",        &Evebrain::_getConfig,        true);
   cmdProcessor.addCmd("setConfig",        &Evebrain::_setConfig,        true);
   cmdProcessor.addCmd("resetConfig",      &Evebrain::_resetConfig,      true);
@@ -239,6 +250,10 @@ void Evebrain::_uptime(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject 
 }
 
 void Evebrain::_pause(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
+  JsonObject& msg = outJson.createNestedObject("msg");
+  msg["leftMotorRemaining"] = leftMotor.remaining();
+  msg["rightMotorRemaining"] = rightMotor.remaining();
+  
   pause();
 }
 
@@ -305,7 +320,7 @@ void Evebrain::_rightMotorBackward(ArduinoJson::JsonObject &inJson, ArduinoJson:
 
 void Evebrain::_speedMove(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson) {
   float leftSpeed = inJson["arg"]["leftSpeed"], rightSpeed = inJson["arg"]["rightSpeed"];
-  int leftDistance = inJson["arg"]["leftDistance"], rightDistance = inJson["arg"]["rightDistance"];
+  float leftDistance = inJson["arg"]["leftDistance"], rightDistance = inJson["arg"]["rightDistance"];
   if (leftSpeed < 0.0 || leftSpeed > 1.0) {
     outJson["status"] = "error";
     outJson["msg"] = "Left speed is out of range, must be within (0,1]";
@@ -337,12 +352,61 @@ void Evebrain::_speedMove(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObje
   speedMove(leftDistance, leftSpeed, rightDistance, rightSpeed);
 }
 
+void Evebrain::_speedMoveSteps(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson) {
+  float leftSpeed = inJson["arg"]["leftSpeed"], rightSpeed = inJson["arg"]["rightSpeed"];
+  int leftSteps = inJson["arg"]["leftSteps"], rightSteps = inJson["arg"]["rightSteps"];
+  if (leftSpeed < 0.0 || leftSpeed > 1.0) {
+    outJson["status"] = "error";
+    outJson["msg"] = "Left speed is out of range, must be within (0,1]";
+    return;
+  }
+  if (leftSpeed == 0.0 && leftSteps != 0) {
+    outJson["status"] = "error";
+    outJson["msg"] = "Left speed is out of range, cannot be 0 when moving non-zero distance.";
+    return;
+  }
+  if (rightSpeed < 0.0 || rightSpeed > 1.0) {
+    outJson["status"] = "error";
+    outJson["msg"] = "Right speed is out of range, must be within (0,1]";
+    return;
+  }
+  if (rightSpeed == 0.0 && rightSteps != 0) {
+    outJson["status"] = "error";
+    outJson["msg"] = "Right speed is out of range, cannot be 0 when moving non-zero distance.";
+    return;
+  }
+  // make sure speed is not too low.
+  if (leftSpeed < 0.1) {
+    leftSpeed = 0.1;
+  }
+  if (rightSpeed < 0.1) {
+    rightSpeed = 0.1;
+  }
+
+  speedMoveSteps(leftSteps, leftSpeed, rightSteps, rightSpeed);
+}
+
 void Evebrain::_servo(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
   servo(atoi(inJson["arg"].asString()),0);
 }
 
 void Evebrain::_servoII(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
   servo(atoi(inJson["arg"].asString()),1);
+}
+
+void Evebrain::_pinServo(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
+  const char* pin = inJson["arg"]["pin"].asString();
+  const char* angle = inJson["arg"]["angle"].asString();
+  if (pin && angle) {
+    int success = PinServos::startServo(atoi(angle), atoi(pin));
+    if (!success) {
+      outJson["status"] = "error";
+      outJson["msg"] = "Pin not valid for generic servo.";  
+    }
+  } else {
+    outJson["status"] = "error";
+    outJson["msg"] = "Missing pin or angle argument for genericServo command";  
+  }
 }
 
 void Evebrain::_beep(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
@@ -373,7 +437,7 @@ void Evebrain::_compassSensor(ArduinoJson::JsonObject &inJson, ArduinoJson::Json
   compassSensor();
 }
 
-void Evebrain::_postToServer(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
+void ICACHE_FLASH_ATTR Evebrain::_postToServer(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson ) {
   if(!(inJson.containsKey("arg") && inJson["arg"].is<JsonObject&>())) return;
 
   // Set doPost byte if eBrain will post in intervals or just once
@@ -468,6 +532,9 @@ void Evebrain::_getConfig(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObje
   msg["ap_encrypted"] = !!strlen(settings.ap_pass);
   msg["discovery"] = settings.discovery;
   msg["wifi_mode"] = modes[EvebrainWifi::getWifiMode()];
+  msg["wheelDiameter"] = settings.wheelDiameter;
+  msg["wheelDistance"] = settings.wheelDistance;
+  msg["stepsPerTurn"] = STEPS_PER_TURN;
 }
 
 void Evebrain::_setConfig(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
@@ -523,6 +590,15 @@ void Evebrain::_setConfig(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObje
   if(inJson["arg"].asObject().containsKey("discovery")){
     settings.discovery = inJson["arg"]["discovery"];
   }
+  // The wheel diameter
+  if (inJson["arg"].asObject().containsKey("wheelDiameter")) {
+    settings.wheelDiameter = inJson["arg"]["wheelDiameter"];
+  }
+  // The distance between wheels
+  if (inJson["arg"].asObject().containsKey("wheelDistance")) {
+    settings.wheelDistance = inJson["arg"]["wheelDistance"];
+  }
+  calculateForWheels();
   wifi.setupWifi();
   saveSettings();
 }
@@ -541,11 +617,23 @@ void Evebrain::_startWifiScan(ArduinoJson::JsonObject &inJson, ArduinoJson::Json
 
 void Evebrain::takeUpSlack(byte rightMotorDir, byte leftMotorDir){
   // Take up the slack on each motor
-  if(rightMotor.lastDirection != rightMotorDir){
-    rightMotor.turn(settings.slackCalibration, rightMotorDir);
-  }
+  takeUpSlackRight(rightMotorDir);
+  takeUpSlackLeft(leftMotorDir);
+}
+
+void Evebrain::takeUpSlackLeft(byte leftMotorDir) {
   if(leftMotor.lastDirection != leftMotorDir){
     leftMotor.turn(settings.slackCalibration, leftMotorDir);
+    // wait until the motor is done spinning
+    while (!leftMotor.ready()) {}
+  }
+}
+
+void Evebrain::takeUpSlackRight(byte rightMotorDir) {
+  if(rightMotor.lastDirection != rightMotorDir){
+    rightMotor.turn(settings.slackCalibration, rightMotorDir);
+    // wait until the motor is done spinning
+    while (!rightMotor.ready()) {}
   }
 }
 
@@ -595,7 +683,7 @@ void Evebrain::stop(){
   calibratingSlack = false;
 }
 
-void Evebrain::beep(int semi_tone, int duration){
+void ICACHE_FLASH_ATTR Evebrain::beep(int semi_tone, int duration){
   if (semi_tone>=0 && semi_tone<=88){
     tone(SPEAKER_PIN, frequencyHZ[semi_tone]);
   }
@@ -723,14 +811,7 @@ void Evebrain::gpio_pwm(byte pin, byte value){
   analogWrite(pin, value);
 }
 
-void Evebrain::leftMotorForward(int distance){
-  takeUpSlack(BACKWARD, FORWARD);
-  leftMotor.turn(distance * steps_per_degree * settings.turnCalibration, FORWARD);
-  wait();
-}
-
-
-void Evebrain::receiveFromServer() {
+void ICACHE_FLASH_ATTR Evebrain::receiveFromServer() {
   client.setInsecure();
   char getlink[100];
   strcpy(getlink,settings.hostServer);
@@ -763,7 +844,7 @@ void Evebrain::receiveFromServer() {
   }
 }
 
-void Evebrain::postMsgToServer(char * msg){
+void ICACHE_FLASH_ATTR Evebrain::postMsgToServer(char * msg){
   client.setInsecure();
   if (http.begin(client, settings.hostServer)) {
     http.addHeader("Content-Type", "application/json");
@@ -775,7 +856,7 @@ void Evebrain::postMsgToServer(char * msg){
 
 
 
-void Evebrain::postToServer(){
+void ICACHE_FLASH_ATTR Evebrain::postToServer(){
   int analog = analogRead(0);
   int pins[10] = {4,5,10,16,14,12,13,0,2};
   char pinState[10];
@@ -833,7 +914,7 @@ void Evebrain::servo(int angle, int pin){
     servoPosition = angle;
     wait();
   }
-  if(pin == 1){ 
+  if(pin == 1){
     servoOne.attach(SERVO_PIN_TWO,500,2200);
     servoOne.write(angle);
     servoMove = 1;
@@ -842,36 +923,49 @@ void Evebrain::servo(int angle, int pin){
   }
 }
 
+void Evebrain::leftMotorForward(int distance){
+  takeUpSlackLeft(FORWARD);
+  leftMotor.turn(distance * steps_per_mm * settings.turnCalibration, FORWARD);
+  wait();
+}
+
 void Evebrain::rightMotorForward(int distance){
-  takeUpSlack(FORWARD, BACKWARD);
-  rightMotor.turn(distance * steps_per_degree * settings.turnCalibration, FORWARD);
+  takeUpSlackRight(FORWARD);
+  rightMotor.turn(distance * steps_per_mm * settings.turnCalibration, FORWARD);
   wait();
 }
 
 void Evebrain::leftMotorBackward(int distance){
-  takeUpSlack(FORWARD, BACKWARD);
-  leftMotor.turn(distance * steps_per_degree * settings.turnCalibration, BACKWARD);
+  takeUpSlackLeft(BACKWARD);
+  leftMotor.turn(distance * steps_per_mm * settings.turnCalibration, BACKWARD);
   wait();
 }
 
 void Evebrain::rightMotorBackward(int distance){
-  takeUpSlack(BACKWARD, FORWARD);
-  rightMotor.turn(distance * steps_per_degree * settings.turnCalibration, BACKWARD);
+  takeUpSlackRight(BACKWARD);
+  rightMotor.turn(distance * steps_per_mm * settings.turnCalibration, BACKWARD);
   wait();
 }
 
-void Evebrain::speedMove(int leftDistance, float leftSpeed, int rightDistance, float rightSpeed){
-  //Serial.printf("ldist %d lspeed %f rdist %d rspeed %f\n", leftDistance, leftSpeed, rightDistance, rightSpeed);
+void Evebrain::speedMove(float leftDistance, float leftSpeed, float rightDistance, float rightSpeed){
+  speedMoveSteps(leftDistance * steps_per_mm, leftSpeed, rightDistance * steps_per_mm, rightSpeed);
+}
 
-  byte rightMotorDir = rightDistance > 0 ? FORWARD : BACKWARD, leftMotorDir = leftDistance > 0 ? BACKWARD : FORWARD;
-  rightMotor.setRelSpeed(rightSpeed);
-  leftMotor.setRelSpeed(leftSpeed);
-  takeUpSlack(rightMotorDir, leftMotorDir);
-  if (rightDistance != 0) {
-    rightMotor.turn(abs(rightDistance) * plotter_steps_per_mm * settings.turnCalibration, rightMotorDir);
+void Evebrain::speedMoveSteps(int leftSteps, float leftSpeed, int rightSteps, float rightSpeed){
+  byte rightMotorDir = rightSteps > 0 ? FORWARD : BACKWARD, leftMotorDir = leftSteps > 0 ? FORWARD : BACKWARD;
+  if (rightSteps != 0) {
+    takeUpSlackRight(rightMotorDir);
+    // taking up slack resets the speed to 1.
+    rightMotor.setRelSpeed(rightSpeed);
+    long steps = abs(rightSteps) * settings.turnCalibration;
+    rightMotor.turn(steps, rightMotorDir);
   }
-  if (leftDistance != 0) {
-    leftMotor.turn(abs(leftDistance) * plotter_steps_per_mm * settings.turnCalibration, leftMotorDir);
+  if (leftSteps != 0) {
+    takeUpSlackLeft(leftMotorDir);
+    // taking up slack resets the speed to 1.
+    leftMotor.setRelSpeed(leftSpeed);
+    long steps = abs(leftSteps) * settings.turnCalibration;
+    leftMotor.turn(steps, leftMotorDir);
   }
 }
 
@@ -904,10 +998,6 @@ void Evebrain::readSensors(byte pin){
 void Evebrain::version(char v){
   hwVersion = v;
   sprintf(versionStr, "%d.%s", hwVersion, Evebrain_SUB_VERSION);
-  steps_per_mm = STEPS_PER_MM_V2;
-  steps_per_degree = STEPS_PER_DEGREE_V2;
-  plotter_steps_per_mm = PLOTTER_STEPS_PER_MM;
-  wheel_distance = WHEEL_DISTANCE_V2;
 }
 
 
@@ -989,6 +1079,10 @@ void Evebrain::servoHandler(){
       delayMicroseconds((((servoPosition%181)/90)+0.5)*1000);
       digitalWrite(SERVO_PIN, LOW);
       next_servo_pulse = micros() + (12000 - (((servoPosition%181)/90)+0.5)*1000);
+      // if now done, pull pin 10 HIGH as a precaution
+      if (servo_pulses_left == 0) {
+        digitalWrite(SERVO_PIN, HIGH);
+      }
     }
   }
 }
@@ -1128,12 +1222,14 @@ void Evebrain::loop()
   if(wifiEnabled){
     wifi.run();
   }
+  PinServos::poll();
   serialHandler();
   checkReady();
   ota.runOTA();
   // connect to websocket client (if one is trying to connect) and check for incoming message
   websocketPoll();
   digitalNotifyHandler();
+  PinServos::poll();
 
   if (settings.doPost && ready() && (millis() - previousPostTime) >= (((unsigned long)settings.serverRequestTime)*1000)) {
     postToServer();

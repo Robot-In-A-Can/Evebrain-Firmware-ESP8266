@@ -9,7 +9,7 @@
 #define DEFAULT_STEP_PERIOD 1500
 #define UCOUNTER_DEFAULT DEFAULT_STEP_PERIOD/BASE_INTERRUPT_US
 
-#define BATCH_SIZE 10
+#define BATCH_SIZE 4
 
 class ShiftStepper {
   public:
@@ -29,6 +29,7 @@ class ShiftStepper {
 
     // Sets the speed of the motor for the current move (must be <1); reset back to 1 next time.
     void setRelSpeed(float multiplier);
+    float getRelSpeed();
   private:
     static ShiftStepper *firstInstance;
     ShiftStepper *nextInstance;
@@ -38,12 +39,11 @@ class ShiftStepper {
     volatile long _remaining;
     byte _dir;
     
-    // Both of these are related to slow operation. The way that works is that
-    // it sends a batch of 10 pulses, then waits; that wait makes the stepper go more slowly.
+    // The three of these are related to slow operation.
 
     // How many timer triggers that are skipped between batches for the slowdown
     volatile int cyclesToWait;
-    // Counts the number of timer triggers remaining to wait out for the slowdown
+    // Counts the number of timer triggers remaining to wait out for the current slowdown
     volatile int _remainingCyclesToSlowdown;
     // Number of pulses remaining in batch.
     volatile byte _remainingInBatch;

@@ -24,25 +24,19 @@
 // 2 x 32 x 63.7 = 4076.8
 #define STEPS_PER_TURN    4076.8f
 
-#define CIRCUMFERENCE_MM_V2  254.4f
-#define WHEEL_DISTANCE_V2    108.5f
+#define DEFAULT_DIAMETER_MM_V2  80.97804f
+#define DEFAULT_WHEEL_DISTANCE_V2    108.5f
 #define PENUP_DELAY_V2 2000
 #define PENDOWN_DELAY_V2 1100
-#define STEPS_PER_MM_V2      STEPS_PER_TURN / CIRCUMFERENCE_MM_V2
-// the steps per degree of turn when steppers are acting as wheels in the bot
-#define STEPS_PER_DEGREE_V2  ((WHEEL_DISTANCE_V2 * 3.1416) / 360) * STEPS_PER_MM_V2
 
-#define PLOTTER_CIRCUMFERENCE_MM (3.1416 * 25.0f)
-#define PLOTTER_STEPS_PER_MM STEPS_PER_TURN / PLOTTER_CIRCUMFERENCE_MM
-
-#define Evebrain_SUB_VERSION "3.0"
+#define Evebrain_SUB_VERSION "3.1"
 
 #define hmc5883l_address  0x1E
 
 #define EEPROM_OFFSET 0
 #define MAGIC_BYTE_1 0xF0
 #define MAGIC_BYTE_2 0x0D
-#define SETTINGS_VERSION 1
+#define SETTINGS_VERSION 2
 
 #define SERVO_PULSES 30
 #define DHTPIN 16 
@@ -69,6 +63,8 @@ struct EvebrainSettings {
   unsigned int slackCalibration;
   float        moveCalibration;
   float        turnCalibration;
+  float        wheelDiameter;
+  float        wheelDistance; // distance between wheels
   char         sta_ssid[32];
   char         sta_pass[64];
   bool         sta_dhcp;
@@ -114,7 +110,8 @@ class Evebrain {
     void rightMotorForward(int);
     void leftMotorBackward(int);
     void rightMotorBackward(int);
-    void speedMove(int leftDistance, float leftSpeed, int rightDistance, float rightSpeed);
+    void speedMove(float leftDistance, float leftSpeed, float rightDistance, float rightSpeed);
+    void speedMoveSteps(int, float, int, float);
     void servo(int,int);
     void temperature();
     void humidity();
@@ -143,6 +140,7 @@ class Evebrain {
     void sensorNotifier();
     void checkState();
     void initSettings();
+    void calculateForWheels();
     void saveSettings();
     void checkReady();
     void version(char);
@@ -171,10 +169,12 @@ class Evebrain {
     void _leftMotorBackward(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _rightMotorBackward(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _speedMove(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
+    void _speedMoveSteps(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _analogInput(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _readSensors(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _servo(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _servoII(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
+    void _pinServo(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _temperature(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _humidity(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
     void _digitalInput(ArduinoJson::JsonObject &, ArduinoJson::JsonObject &);
@@ -214,12 +214,12 @@ class Evebrain {
     unsigned long lastLedChange;
     Evebrain& self() { return *this; }
     void takeUpSlack(byte, byte);
+    void takeUpSlackRight(byte);
+    void takeUpSlackLeft(byte);
     void calibrateHandler();
     boolean paused;
     float steps_per_mm;
     float steps_per_degree;
-    float plotter_steps_per_mm;
-    int wheel_distance;
     long timeTillComplete;
     boolean calibratingSlack;
     bool serialEnabled = false;
