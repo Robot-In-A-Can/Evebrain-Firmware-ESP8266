@@ -18,7 +18,7 @@ private:
     bool running;
 };
 
-class GenericServo
+class PinServos
 {
 public:
     // This allows for servos to be used with the other GPIO pins on the board

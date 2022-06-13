@@ -2,7 +2,7 @@
 #include "Evebrain.h"
 #include "lib/DHT/DHTesp.h"
 #include "lib/Interrupts.h"
-#include "lib/GenericServo.h"
+#include "lib/PinServos.h"
 
 DHTesp dht;
 CmdProcessor cmdProcessor;
@@ -231,7 +231,7 @@ void ICACHE_FLASH_ATTR Evebrain::initCmds(){
   cmdProcessor.addCmd("speedMoveSteps",   &Evebrain::_speedMoveSteps,   false);
   cmdProcessor.addCmd("servo",            &Evebrain::_servo,            false);
   cmdProcessor.addCmd("servoII",          &Evebrain::_servoII,          false);
-  cmdProcessor.addCmd("genericServo",     &Evebrain::_genericServo,     true);
+  cmdProcessor.addCmd("pinServo",         &Evebrain::_pinServo,          true);
   cmdProcessor.addCmd("getConfig",        &Evebrain::_getConfig,        true);
   cmdProcessor.addCmd("setConfig",        &Evebrain::_setConfig,        true);
   cmdProcessor.addCmd("resetConfig",      &Evebrain::_resetConfig,      true);
@@ -394,11 +394,11 @@ void Evebrain::_servoII(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject
   servo(atoi(inJson["arg"].asString()),1);
 }
 
-void Evebrain::_genericServo(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
+void Evebrain::_pinServo(ArduinoJson::JsonObject &inJson, ArduinoJson::JsonObject &outJson){
   const char* pin = inJson["arg"]["pin"].asString();
   const char* angle = inJson["arg"]["angle"].asString();
   if (pin && angle) {
-    int success = GenericServo::startServo(atoi(angle), atoi(pin));
+    int success = PinServos::startServo(atoi(angle), atoi(pin));
     if (!success) {
       outJson["status"] = "error";
       outJson["msg"] = "Pin not valid for generic servo.";  
@@ -1222,14 +1222,14 @@ void Evebrain::loop()
   if(wifiEnabled){
     wifi.run();
   }
-  GenericServo::poll();
+  PinServos::poll();
   serialHandler();
   checkReady();
   ota.runOTA();
   // connect to websocket client (if one is trying to connect) and check for incoming message
   websocketPoll();
   digitalNotifyHandler();
-  GenericServo::poll();
+  PinServos::poll();
 
   if (settings.doPost && ready() && (millis() - previousPostTime) >= (((unsigned long)settings.serverRequestTime)*1000)) {
     postToServer();

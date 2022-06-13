@@ -1,4 +1,4 @@
-#include "GenericServo.h"
+#include "PinServos.h"
 #include "Arduino.h"
 
 ManualServo::ManualServo():pin(-1), angle(0), running(false), nextServoPulse(0) {
@@ -37,11 +37,11 @@ bool ManualServo::isRunning() {
     return running;
 }
 
-bool GenericServo::pinValidForServo(int pin) {
+bool PinServos::pinValidForServo(int pin) {
     return servoPinToIndex(pin) != -1;
 }
 
-bool GenericServo::startServo(int angle, int pin) {
+bool PinServos::startServo(int angle, int pin) {
     angle = constrain(angle, 0, 180);
 
     int index = servoPinToIndex(pin);
@@ -55,7 +55,7 @@ bool GenericServo::startServo(int angle, int pin) {
     }
 }
 
-void GenericServo::poll() {
+void PinServos::poll() {
     for (int i = 0; i < NUMBER_OF_SERVO_PINS; i++) {
         servos[i].poll();
         if (servos[i].isRunning() &&
@@ -65,7 +65,7 @@ void GenericServo::poll() {
     }
 }
 
-int GenericServo::servoPinToIndex(int pin) {
+int PinServos::servoPinToIndex(int pin) {
     for (int i = 0; i < NUMBER_OF_SERVO_PINS; i++) {
         if (validPins[i] == pin) {
             return i;
@@ -74,7 +74,7 @@ int GenericServo::servoPinToIndex(int pin) {
     return -1;
 }
 
-int GenericServo::validPins[NUMBER_OF_SERVO_PINS] = {0, 2, 4, 5, 10, 16, 14, 12, 13};
-ManualServo GenericServo::servos[NUMBER_OF_SERVO_PINS] = {ManualServo(), ManualServo(), ManualServo(), ManualServo(),
+int PinServos::validPins[NUMBER_OF_SERVO_PINS] = {0, 2, 4, 5, 10, 16, 14, 12, 13};
+ManualServo PinServos::servos[NUMBER_OF_SERVO_PINS] = {ManualServo(), ManualServo(), ManualServo(), ManualServo(),
                                                     ManualServo(), ManualServo(), ManualServo(), ManualServo(), ManualServo()};
-unsigned long GenericServo::timesStarted[NUMBER_OF_SERVO_PINS] = {0};
+unsigned long PinServos::timesStarted[NUMBER_OF_SERVO_PINS] = {0};
