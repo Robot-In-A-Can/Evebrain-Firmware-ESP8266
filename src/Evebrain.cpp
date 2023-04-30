@@ -49,6 +49,10 @@ Evebrain::Evebrain(){
   lastLedChange = millis();
   calibratingSlack = false;
   timeTillComplete = 0;
+  starsMode = 0;
+  lightMode = 0;
+  triggerMode = 0;
+  thereminMode = 0;
   humidityRead = 0;
   humidityVar = 0;
   temperatureRead = 0;
@@ -136,7 +140,25 @@ void Evebrain::initSettings(){
        settings.turnCalibration > 0.5f &&
        settings.turnCalibration < 1.5f){
       // The values look OK so let's leave them as they are
-      if (digitalRead(RESET) == 0) {
+      if (digitalRead(RESET) == 0 && digitalRead(10) == 0) {
+        if (digitalRead(SETTHRESHOLD) == 1){
+          settings.threshold = analogRead(0);
+        }
+        if (digitalRead(POSTMODE) == 1){
+          settings.doPost = !settings.doPost;
+        }
+        if (digitalRead(STARSMODE) == 1){
+          starsMode = 1;
+        }
+        if (digitalRead(LIGHTMODE) == 1){
+          lightMode = 1;
+        }
+        if (digitalRead(TRIGGERMODE) == 1){
+          triggerMode = 1;
+        }
+        if (digitalRead(THEREMINMODE) == 1){
+          thereminMode = 1;
+        }
         calculateForWheels();
         return;
       }
@@ -145,6 +167,7 @@ void Evebrain::initSettings(){
   // Either this is the first boot or the settings are bad so let's reset them
   settings.settingsVersion = SETTINGS_VERSION;
   settings.slackCalibration = 14;
+  settings.threshold = 512;
   settings.moveCalibration = 1.0f;
   settings.turnCalibration = 1.0f;
   settings.wheelDiameter = DEFAULT_DIAMETER_MM_V2;
@@ -1214,25 +1237,95 @@ unsigned long previousPostTime = 0;
 
 void Evebrain::loop()
 {
-  ledHandler();
-  servoHandler();
-  calibrateHandler();
-  networkNotifier();
-  wifiScanNotifier();
-  if(wifiEnabled){
-    wifi.run();
-  }
-  PinServos::poll();
-  serialHandler();
-  checkReady();
-  ota.runOTA();
-  // connect to websocket client (if one is trying to connect) and check for incoming message
-  websocketPoll();
-  digitalNotifyHandler();
-  PinServos::poll();
 
-  if (settings.doPost && ready() && (millis() - previousPostTime) >= (((unsigned long)settings.serverRequestTime)*1000)) {
-    postToServer();
-    previousPostTime = millis();
+  if (starsMode){
+    for(char i=0; i<5; i++){
+      forward(100);
+      delay(4600);
+      right(144);
+      delay(4000);
+    }
+    delay(10000);
+  }
+  else if (lightMode){
+    int templight = analogRead(0);
+    right(64);
+    delay(2000);
+    if (analogRead(0) > templight) {
+      forward(100);
+      delay(4100);
+    }
+    else {
+      left(64);
+      delay(2000);
+      templight = analogRead(0);
+      left(64);
+      delay(2000);
+      if (analogRead(0) > templight) {
+        forward(100);
+        delay(4100);
+      }
+      else {
+        right(64);
+        delay(2000);
+        forward(100);
+        delay(4100);
+      }
+    }
+  }
+  else if (triggerMode){
+    if (analogRead(0) < settings.threshold) {
+      gpio_on(4);
+      gpio_on(5);
+      gpio_on(10);
+      gpio_on(16);
+      gpio_on(14);
+      gpio_on(12);
+      gpio_on(13);
+      gpio_on(0);
+      gpio_on(2);
+    } else {
+      gpio_off(4);
+      gpio_off(5);
+      gpio_off(10);
+      gpio_off(16);
+      gpio_off(14);
+      gpio_off(12);
+      gpio_off(13);
+      gpio_off(0);
+      gpio_off(2);
+    }
+    delay(10);
+  }  
+  else if (thereminMode){
+    int pitch=map(analogRead(0), settings.threshold-100 > 0 ? settings.threshold-100 : 0 , 650, 0, 87);
+    tone(5, frequencyHZ[pitch]);
+    delay(10);
+  } 
+  else {
+    ledHandler();
+    servoHandler();
+    calibrateHandler();
+    networkNotifier();
+    wifiScanNotifier();
+
+    if(wifiEnabled){
+      wifi.run();
+    }
+
+    PinServos::poll();
+    serialHandler();
+    checkReady();
+    ota.runOTA();
+
+    // connect to websocket client (if one is trying to connect) and check for incoming message
+    websocketPoll();
+    digitalNotifyHandler();
+    PinServos::poll();
+
+    if (settings.doPost && ready() && (millis() - previousPostTime) >= (((unsigned long)settings.serverRequestTime)*1000)) {
+      postToServer();
+      previousPostTime = millis();
+    }
   }
 }

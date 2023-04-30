@@ -48,7 +48,16 @@
 #define SHIFT_REG_DATA  12
 #define SHIFT_REG_CLOCK 13
 #define SHIFT_REG_LATCH 14
+
+//Modes
 #define RESET 13
+#define POSTMODE 12
+#define SETTHRESHOLD 14
+#define TRIGGERMODE 14
+#define STARSMODE 5
+#define LIGHTMODE 12
+#define THEREMINMODE 12
+
 
 #define STATUS_LED_PIN 15
 #define LED_PULSE_TIME 6000.0
@@ -61,6 +70,7 @@
 struct EvebrainSettings {
   uint8_t      settingsVersion;
   unsigned int slackCalibration;
+  unsigned int threshold;
   float        moveCalibration;
   float        turnCalibration;
   float        wheelDiameter;
@@ -201,6 +211,10 @@ class Evebrain {
     int16_t compassZ;
     float humidityVar;
     int analogSensor;
+    boolean starsMode;
+    boolean lightMode;
+    boolean triggerMode;
+    boolean thereminMode;
     boolean humidityRead;
     boolean temperatureRead;
     boolean distanceRead;
